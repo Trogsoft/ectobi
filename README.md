@@ -18,7 +18,7 @@ Yep. Initially, that'll be a survey module. Say you start with data that's just 
 
 ## What about outputs?
 
-You'll be able to select how you want to output. That might be updating a master Excel file, or it might be running a script which produces a PowerPoint presentation. You'll be able to put the data into PowerBI, and Ectobi will have its own web-based reporting suite, as well as an app for mobile, tablet and even wall mounted monitors.
+You'll be able to select how you want to output. That might be updating a master Excel file, or it might be running a script which produces a PowerPoint presentation. You'll be able to put the data into PowerBI, and Ectobi will have its own web-based reporting suite, as well as an app for mobile, tablet and even wall mounted screens or kiosks.
 
 ## Sounds complicated. How usable will it be?
 
