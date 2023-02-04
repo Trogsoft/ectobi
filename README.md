@@ -1,4 +1,4 @@
-# ectobi
+# Ectobi
 
 ## What is it?
 
