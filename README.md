@@ -2,7 +2,7 @@
 
 ## What is it?
 
-It's a suite of tools which are intended to take data from some sort of raw form and take it through to a final state where it can be reported on live, or turned into static reports.
+It's a suite of tools which are intended to take data from some sort of raw form and take it through to a final state where it can be reported on live, or turned into static reports or some other kind of output.
 
 ## What sort of data?
 
