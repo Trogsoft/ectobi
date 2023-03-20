@@ -1,0 +1,8 @@
+{
+  "profiles": {
+    "ectobi": {
+      "commandName": "Project",
+      "commandLineArgs": "schema list"
+    }
+  }
+}
