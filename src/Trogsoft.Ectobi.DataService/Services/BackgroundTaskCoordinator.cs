@@ -4,7 +4,7 @@ using Trogsoft.Ectobi.Common.Interfaces;
 
 namespace Trogsoft.Ectobi.DataService.Services
 {
-    public class BackgroundJobCoordinator : IBackgroundJobCoordinator
+    public class BackgroundTaskCoordinator : IBackgroundTaskCoordinator
     {
         public void Enqueue<T>(Expression<Action<T>> expr)
         {

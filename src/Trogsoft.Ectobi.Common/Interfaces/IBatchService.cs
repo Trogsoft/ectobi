@@ -8,6 +8,6 @@ namespace Trogsoft.Ectobi.Common.Interfaces
 {
     public interface IBatchService
     {
-        Success BackgroundImportBatch(BackgroundJobInfo job, ImportBatchModel model);
+        Success BackgroundImportBatch(BackgroundTaskInfo job, ImportBatchModel model);
     }
 }

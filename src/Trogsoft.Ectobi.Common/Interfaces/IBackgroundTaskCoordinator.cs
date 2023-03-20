@@ -6,7 +6,8 @@ using System.Threading.Tasks;
 
 namespace Trogsoft.Ectobi.Common.Interfaces
 {
-    public interface IBackgroundJob
+    public interface IBackgroundTaskCoordinator
     {
+        void Enqueue<T>(System.Linq.Expressions.Expression<Action<T>> expr);
     }
 }

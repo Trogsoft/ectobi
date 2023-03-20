@@ -6,7 +6,7 @@ namespace Trogsoft.Ectobi.BatchOperations
     {
         private readonly ImportBatchModel model;
 
-        public BatchImport(BackgroundJobInfo job, ImportBatchModel model) : base(job)
+        public BatchImport(BackgroundTaskInfo job, ImportBatchModel model) : base(job)
         {
             this.model = model;
         }
