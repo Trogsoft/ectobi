@@ -1,6 +1,7 @@
 using Hangfire;
 using Hangfire.SqlServer;
 using Microsoft.EntityFrameworkCore;
+using System.Runtime.CompilerServices;
 using Trogsoft.Ectobi.Common.Interfaces;
 using Trogsoft.Ectobi.Data;
 using Trogsoft.Ectobi.DataService.Services;
@@ -26,9 +27,17 @@ namespace Trogsoft.Ectobi.DataService
             builder.Services.AddTransient<IEventNotificationService, EventNotificationService>();
             builder.Services.AddTransient<ISchemaService, SchemaService>();
             builder.Services.AddTransient<IFieldService, FieldService>();
-            builder.Services.AddTransient<IBackgroundTaskCoordinator, BackgroundTaskCoordinator>();
+            builder.Services.AddSingleton<IBackgroundTaskCoordinator, BackgroundTaskCoordinator>();
             builder.Services.AddTransient<IEctoMapper, EctoMapper>();
             builder.Services.AddControllers();
+
+            var populators = DiscoverModules<IPopulator>(builder.Services);
+
+            builder.Services.Configure<ModuleOptions>(opt =>
+            {
+                opt.Populators.AddRange(populators);
+            });
+            builder.Services.AddSingleton<ModuleManager>();
 
             builder.Services.AddHangfire(configuration => configuration
                 .SetDataCompatibilityLevel(CompatibilityLevel.Version_170)
@@ -51,6 +60,8 @@ namespace Trogsoft.Ectobi.DataService
 
             var app = builder.Build();
 
+            app.Services.GetService<ModuleManager>()?.RegisterModules();
+
             // Configure the HTTP request pipeline.
             if (app.Environment.IsDevelopment())
             {
@@ -68,5 +79,19 @@ namespace Trogsoft.Ectobi.DataService
 
             app.Run();
         }
+
+        private static List<Type> DiscoverModules<T>(IServiceCollection services)
+        {
+
+            List<Type> modules = new List<Type>();
+            foreach (var type in AppDomain.CurrentDomain.GetAssemblies().SelectMany(x=>x.GetTypes().Where(y=>typeof(T).IsAssignableFrom(y) && y.IsPublic && !y.IsAbstract && !y.IsInterface)))
+            {
+                services.AddTransient(type);
+                modules.Add(type);
+            }
+            return modules;
+
+        }
+
     }
 }

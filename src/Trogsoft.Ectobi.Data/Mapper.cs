@@ -30,7 +30,9 @@ namespace Trogsoft.Ectobi.Data
                 .Include<SchemaFieldEditModel, SchemaField>()
                 .ReverseMap();
 
-            cfg.CreateMap<SchemaFieldEditModel, SchemaField>().ReverseMap();
+            cfg.CreateMap<SchemaFieldEditModel, SchemaField>()
+                .ForMember(x => x.Populator, y => y.Ignore())
+                .ReverseMap();
 
 
         });

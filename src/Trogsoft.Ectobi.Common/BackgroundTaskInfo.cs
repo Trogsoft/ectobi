@@ -6,7 +6,7 @@ using System.Threading.Tasks;
 
 namespace Trogsoft.Ectobi.Common
 {
-    public class BackgroundJobInfo
+    public class BackgroundTaskInfo
     {
         public Guid Id { get; set; } = Guid.NewGuid();
         public string Name { get; set; }

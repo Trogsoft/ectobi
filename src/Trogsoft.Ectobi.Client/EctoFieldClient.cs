@@ -20,5 +20,11 @@ namespace Trogsoft.Ectobi.Client
             return result;
         }
 
+        public async Task<Success> DeleteField(string schemaTid, string fieldTid)
+        {
+            var result = await DeleteAsync($"api/field/{schemaTid}/{fieldTid}");
+            return result;
+        }
+
     }
 }

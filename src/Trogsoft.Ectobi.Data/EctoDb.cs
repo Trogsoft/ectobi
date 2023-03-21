@@ -31,6 +31,7 @@ namespace Trogsoft.Ectobi.Data
             title = title.Replace(" ", "-"); // Replace all spaces with hyphens
             string tid = rgx.Replace(title, "-"); // Replace all non-alpha characters with hyphens
             tid = Regex.Replace(tid, "-{2,}", "-"); // Replace multiple hypens with one
+            tid = tid.Trim('-'); // Remove any trailing hyphens
             int idx = 1; 
             // Check to see if the text ID exists. If it does, add a hyphen and an index number until it doesn't.
             while (Set<TEntity>().AsQueryable().Any(x => x.TextId == tid))

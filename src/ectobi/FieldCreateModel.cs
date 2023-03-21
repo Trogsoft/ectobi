@@ -19,5 +19,8 @@ namespace ectobi
         [Parameter("flags", IsRequired = false, ListSeparator = ",")]
         public SchemaFieldFlags Flags { get; set; }
 
+        [Parameter("populator", IsRequired = false)]
+        public string Populator { get; set; }
+
     }
 }

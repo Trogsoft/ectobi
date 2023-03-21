@@ -3,6 +3,7 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
+using System.Xml.XPath;
 using Trogsoft.CommandLine;
 using Trogsoft.Ectobi.Common;
 
@@ -31,7 +32,8 @@ namespace ectobi
                 Name = model.Name,
                 Description = model.Description,
                 Type = model.Type,
-                Flags = model.Flags
+                Flags = model.Flags,
+                Populator = model.Populator
             };
             var result = InstanceManager.Client.Fields.CreateField(model.SchemaTid, sfeModel).Result;
             if (result.Succeeded)
@@ -45,5 +47,20 @@ namespace ectobi
             }
             return 0;
         }
+
+        [Operation("delete")]
+        public int Delete(string schema, string field)
+        {
+            var result = InstanceManager.Client.Fields.DeleteField(schema, field).Result;
+            if (result.Succeeded)
+                WriteSuccess($"Success.");
+            else
+            {
+                WriteError($"Failed: {result.StatusMessage}");
+                return result.ErrorCode;
+            }
+            return 0;
+        }
+
     }
 }

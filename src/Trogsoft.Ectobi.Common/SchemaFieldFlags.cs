@@ -5,6 +5,7 @@
     {
         AllowNull = 1,
         NumericID = 2,
-        DisplayValue = 4
+        DisplayValue = 4,
+        RequiredAtImport = 8
     }
 }
