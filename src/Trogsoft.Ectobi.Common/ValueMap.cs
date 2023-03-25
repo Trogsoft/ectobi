@@ -1,21 +1,22 @@
 ﻿using System;
+using System.Collections;
 using System.Collections.Generic;
 using System.ComponentModel;
+using System.ComponentModel.DataAnnotations;
 using System.Linq;
+using System.Runtime.CompilerServices;
 using System.Text;
 using System.Threading.Tasks;
 
 namespace Trogsoft.Ectobi.Common
 {
-    public class ValueMap : Dictionary<string, object>
+    public class ValueMap 
     {
-        public T GetValue<T>(string key, T defaultValue)
-        {
-            if (this.ContainsKey(key) && typeof(T).IsAssignableFrom(this[key].GetType()))
-            {
-                return (T)this[key];
-            }
-            return defaultValue;
-        }
+        public List<string> Headings { get; set; } = new List<string>();
+        public List<ValueMapRow> Rows { get; set; } = new();
+    }
+
+    public class ValueMapRow : List<string>
+    {
     }
 }

@@ -12,6 +12,6 @@ namespace Trogsoft.Ectobi.Common
         public string? BatchName { get; set; }
         public string? BatchSource { get; set; }
 
-        public List<ValueMap> Rows { get; set; } = new();
+        public ValueMap ValueMap { get; set; } = new();
     }
 }

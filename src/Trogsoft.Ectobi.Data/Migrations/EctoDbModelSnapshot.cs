@@ -36,10 +36,16 @@ namespace Trogsoft.Ectobi.Data.Migrations
                     b.Property<string>("Description")
                         .HasColumnType("nvarchar(max)");
 
+                    b.Property<int>("Flags")
+                        .HasColumnType("int");
+
                     b.Property<string>("Name")
                         .HasColumnType("nvarchar(max)");
 
-                    b.Property<long>("SchemaId")
+                    b.Property<long?>("SchemaId")
+                        .HasColumnType("bigint");
+
+                    b.Property<long>("SchemaVersionId")
                         .HasColumnType("bigint");
 
                     b.Property<string>("Source")
@@ -52,7 +58,56 @@ namespace Trogsoft.Ectobi.Data.Migrations
 
                     b.HasIndex("SchemaId");
 
+                    b.HasIndex("SchemaVersionId");
+
                     b.ToTable("Batches");
+                });
+
+            modelBuilder.Entity("Trogsoft.Ectobi.Data.LookupSet", b =>
+                {
+                    b.Property<long>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("bigint");
+
+                    SqlServerPropertyBuilderExtensions.UseIdentityColumn(b.Property<long>("Id"));
+
+                    b.Property<string>("Description")
+                        .HasColumnType("nvarchar(max)");
+
+                    b.Property<string>("Name")
+                        .HasColumnType("nvarchar(max)");
+
+                    b.Property<string>("TextId")
+                        .HasColumnType("nvarchar(max)");
+
+                    b.HasKey("Id");
+
+                    b.ToTable("LookupSets");
+                });
+
+            modelBuilder.Entity("Trogsoft.Ectobi.Data.LookupSetValue", b =>
+                {
+                    b.Property<long>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("bigint");
+
+                    SqlServerPropertyBuilderExtensions.UseIdentityColumn(b.Property<long>("Id"));
+
+                    b.Property<long>("LookupSetId")
+                        .HasColumnType("bigint");
+
+                    b.Property<string>("Name")
+                        .IsRequired()
+                        .HasColumnType("nvarchar(max)");
+
+                    b.Property<int>("NumericValue")
+                        .HasColumnType("int");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("LookupSetId");
+
+                    b.ToTable("LookupSetValues");
                 });
 
             modelBuilder.Entity("Trogsoft.Ectobi.Data.Populator", b =>
@@ -140,10 +195,6 @@ namespace Trogsoft.Ectobi.Data.Migrations
                     b.Property<DateTime>("Created")
                         .HasColumnType("datetime2");
 
-                    b.Property<string>("TextId")
-                        .IsRequired()
-                        .HasColumnType("nvarchar(max)");
-
                     b.HasKey("Id");
 
                     b.HasIndex("BatchId");
@@ -184,6 +235,50 @@ namespace Trogsoft.Ectobi.Data.Migrations
                     b.Property<string>("Description")
                         .HasColumnType("nvarchar(max)");
 
+                    b.Property<int>("DisplayOrder")
+                        .HasColumnType("int");
+
+                    b.Property<int>("Flags")
+                        .HasColumnType("int");
+
+                    b.Property<string>("Name")
+                        .HasColumnType("nvarchar(max)");
+
+                    b.Property<long>("SchemaId")
+                        .HasColumnType("bigint");
+
+                    b.Property<string>("TextId")
+                        .HasColumnType("nvarchar(max)");
+
+                    b.Property<int>("Type")
+                        .HasColumnType("int");
+
+                    b.Property<long?>("ValuesFromSchemaId")
+                        .HasColumnType("bigint");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("SchemaId");
+
+                    b.HasIndex("ValuesFromSchemaId");
+
+                    b.ToTable("SchemaFields");
+                });
+
+            modelBuilder.Entity("Trogsoft.Ectobi.Data.SchemaFieldVersion", b =>
+                {
+                    b.Property<long>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("bigint");
+
+                    SqlServerPropertyBuilderExtensions.UseIdentityColumn(b.Property<long>("Id"));
+
+                    b.Property<string>("Description")
+                        .HasColumnType("nvarchar(max)");
+
+                    b.Property<int>("DisplayOrder")
+                        .HasColumnType("int");
+
                     b.Property<int>("Flags")
                         .HasColumnType("int");
 
@@ -196,7 +291,10 @@ namespace Trogsoft.Ectobi.Data.Migrations
                     b.Property<long?>("ProcessId")
                         .HasColumnType("bigint");
 
-                    b.Property<long>("SchemaId")
+                    b.Property<long>("SchemaFieldId")
+                        .HasColumnType("bigint");
+
+                    b.Property<long>("SchemaVersionId")
                         .HasColumnType("bigint");
 
                     b.Property<string>("TextId")
@@ -214,11 +312,43 @@ namespace Trogsoft.Ectobi.Data.Migrations
 
                     b.HasIndex("ProcessId");
 
-                    b.HasIndex("SchemaId");
+                    b.HasIndex("SchemaFieldId");
+
+                    b.HasIndex("SchemaVersionId");
 
                     b.HasIndex("ValuesFromSchemaId");
 
-                    b.ToTable("SchemaFields");
+                    b.ToTable("SchemaFieldVersions");
+                });
+
+            modelBuilder.Entity("Trogsoft.Ectobi.Data.SchemaVersion", b =>
+                {
+                    b.Property<long>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("bigint");
+
+                    SqlServerPropertyBuilderExtensions.UseIdentityColumn(b.Property<long>("Id"));
+
+                    b.Property<DateTime>("Created")
+                        .HasColumnType("datetime2");
+
+                    b.Property<string>("Description")
+                        .HasColumnType("nvarchar(max)");
+
+                    b.Property<string>("Name")
+                        .HasColumnType("nvarchar(max)");
+
+                    b.Property<long>("SchemaId")
+                        .HasColumnType("bigint");
+
+                    b.Property<int>("Version")
+                        .HasColumnType("int");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("SchemaId");
+
+                    b.ToTable("SchemaVersions");
                 });
 
             modelBuilder.Entity("Trogsoft.Ectobi.Data.Value", b =>
@@ -245,27 +375,42 @@ namespace Trogsoft.Ectobi.Data.Migrations
                     b.Property<long>("RecordId")
                         .HasColumnType("bigint");
 
-                    b.Property<long>("SchemaFieldId")
+                    b.Property<long>("SchemaFieldVersionId")
                         .HasColumnType("bigint");
 
                     b.HasKey("Id");
 
                     b.HasIndex("RecordId");
 
-                    b.HasIndex("SchemaFieldId");
+                    b.HasIndex("SchemaFieldVersionId");
 
                     b.ToTable("Values");
                 });
 
             modelBuilder.Entity("Trogsoft.Ectobi.Data.Batch", b =>
                 {
-                    b.HasOne("Trogsoft.Ectobi.Data.Schema", "Schema")
+                    b.HasOne("Trogsoft.Ectobi.Data.Schema", null)
                         .WithMany("Batches")
-                        .HasForeignKey("SchemaId")
+                        .HasForeignKey("SchemaId");
+
+                    b.HasOne("Trogsoft.Ectobi.Data.SchemaVersion", "SchemaVersion")
+                        .WithMany()
+                        .HasForeignKey("SchemaVersionId")
                         .OnDelete(DeleteBehavior.Cascade)
                         .IsRequired();
 
-                    b.Navigation("Schema");
+                    b.Navigation("SchemaVersion");
+                });
+
+            modelBuilder.Entity("Trogsoft.Ectobi.Data.LookupSetValue", b =>
+                {
+                    b.HasOne("Trogsoft.Ectobi.Data.LookupSet", "LookupSet")
+                        .WithMany("Values")
+                        .HasForeignKey("LookupSetId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
+
+                    b.Navigation("LookupSet");
                 });
 
             modelBuilder.Entity("Trogsoft.Ectobi.Data.ProcessElement", b =>
@@ -282,7 +427,7 @@ namespace Trogsoft.Ectobi.Data.Migrations
             modelBuilder.Entity("Trogsoft.Ectobi.Data.Record", b =>
                 {
                     b.HasOne("Trogsoft.Ectobi.Data.Batch", "Batch")
-                        .WithMany()
+                        .WithMany("Records")
                         .HasForeignKey("BatchId")
                         .OnDelete(DeleteBehavior.Cascade)
                         .IsRequired();
@@ -292,6 +437,23 @@ namespace Trogsoft.Ectobi.Data.Migrations
 
             modelBuilder.Entity("Trogsoft.Ectobi.Data.SchemaField", b =>
                 {
+                    b.HasOne("Trogsoft.Ectobi.Data.Schema", "Schema")
+                        .WithMany("SchemaFields")
+                        .HasForeignKey("SchemaId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
+
+                    b.HasOne("Trogsoft.Ectobi.Data.Schema", "ValuesFromSchema")
+                        .WithMany()
+                        .HasForeignKey("ValuesFromSchemaId");
+
+                    b.Navigation("Schema");
+
+                    b.Navigation("ValuesFromSchema");
+                });
+
+            modelBuilder.Entity("Trogsoft.Ectobi.Data.SchemaFieldVersion", b =>
+                {
                     b.HasOne("Trogsoft.Ectobi.Data.Populator", "Populator")
                         .WithMany()
                         .HasForeignKey("PopulatorId");
@@ -300,9 +462,15 @@ namespace Trogsoft.Ectobi.Data.Migrations
                         .WithMany()
                         .HasForeignKey("ProcessId");
 
-                    b.HasOne("Trogsoft.Ectobi.Data.Schema", "Schema")
-                        .WithMany("SchemaFields")
-                        .HasForeignKey("SchemaId")
+                    b.HasOne("Trogsoft.Ectobi.Data.SchemaField", "SchemaField")
+                        .WithMany()
+                        .HasForeignKey("SchemaFieldId")
+                        .OnDelete(DeleteBehavior.Restrict)
+                        .IsRequired();
+
+                    b.HasOne("Trogsoft.Ectobi.Data.SchemaVersion", "SchemaVersion")
+                        .WithMany("Fields")
+                        .HasForeignKey("SchemaVersionId")
                         .OnDelete(DeleteBehavior.Cascade)
                         .IsRequired();
 
@@ -314,9 +482,22 @@ namespace Trogsoft.Ectobi.Data.Migrations
 
                     b.Navigation("Process");
 
-                    b.Navigation("Schema");
+                    b.Navigation("SchemaField");
+
+                    b.Navigation("SchemaVersion");
 
                     b.Navigation("ValuesFromSchema");
+                });
+
+            modelBuilder.Entity("Trogsoft.Ectobi.Data.SchemaVersion", b =>
+                {
+                    b.HasOne("Trogsoft.Ectobi.Data.Schema", "Schema")
+                        .WithMany("Versions")
+                        .HasForeignKey("SchemaId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
+
+                    b.Navigation("Schema");
                 });
 
             modelBuilder.Entity("Trogsoft.Ectobi.Data.Value", b =>
@@ -327,15 +508,25 @@ namespace Trogsoft.Ectobi.Data.Migrations
                         .OnDelete(DeleteBehavior.Cascade)
                         .IsRequired();
 
-                    b.HasOne("Trogsoft.Ectobi.Data.SchemaField", "SchemaField")
+                    b.HasOne("Trogsoft.Ectobi.Data.SchemaFieldVersion", "SchemaFieldVersion")
                         .WithMany()
-                        .HasForeignKey("SchemaFieldId")
+                        .HasForeignKey("SchemaFieldVersionId")
                         .OnDelete(DeleteBehavior.Restrict)
                         .IsRequired();
 
                     b.Navigation("Record");
 
-                    b.Navigation("SchemaField");
+                    b.Navigation("SchemaFieldVersion");
+                });
+
+            modelBuilder.Entity("Trogsoft.Ectobi.Data.Batch", b =>
+                {
+                    b.Navigation("Records");
+                });
+
+            modelBuilder.Entity("Trogsoft.Ectobi.Data.LookupSet", b =>
+                {
+                    b.Navigation("Values");
                 });
 
             modelBuilder.Entity("Trogsoft.Ectobi.Data.Process", b =>
@@ -353,6 +544,13 @@ namespace Trogsoft.Ectobi.Data.Migrations
                     b.Navigation("Batches");
 
                     b.Navigation("SchemaFields");
+
+                    b.Navigation("Versions");
+                });
+
+            modelBuilder.Entity("Trogsoft.Ectobi.Data.SchemaVersion", b =>
+                {
+                    b.Navigation("Fields");
                 });
 #pragma warning restore 612, 618
         }

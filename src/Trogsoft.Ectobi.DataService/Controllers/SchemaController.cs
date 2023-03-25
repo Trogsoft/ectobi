@@ -23,5 +23,13 @@ namespace Trogsoft.Ectobi.DataService.Controllers
         [HttpGet]
         public async Task<IActionResult> ListSchemas(bool includeDetail = false) => SuccessResponse(await schema.GetSchemas(includeDetail));
 
+        // Versions
+
+        [HttpGet("{schemaTid}/versions")]
+        public async Task<IActionResult> GetSchemaVersions(string schemaTid) => SuccessResponse(await schema.GetSchemaVersions(schemaTid));
+
+        [HttpPost("{schemaTid}/versions")]
+        public async Task<IActionResult> CreateSchemaVersion([FromBody] SchemaVersionEditModel model) => SuccessResponse(await schema.CreateSchemaVersion(model));
+
     }
 }

@@ -34,6 +34,7 @@ namespace Trogsoft.Ectobi.DataService.Services
 
         public async Task<Success> DeleteField(string schemaTid, string fieldName)
         {
+
             if (string.IsNullOrWhiteSpace(schemaTid)) return Success.Error("SchemaTid cannot be null.", ErrorCodes.ERR_ARGUMENT_NULL);
             if (string.IsNullOrWhiteSpace(fieldName)) return Success.Error("fieldName cannot be null.", ErrorCodes.ERR_ARGUMENT_NULL);
 
@@ -73,8 +74,20 @@ namespace Trogsoft.Ectobi.DataService.Services
             var newField = mapper.Map<SchemaField>(model);
             newField.TextId = db.GetTextId<SchemaField>($"{model.Name}");
 
-            if (!string.IsNullOrWhiteSpace(model.Populator) && mm.PopulatorExists(model.Populator))
-                newField.PopulatorId = mm.GetPopulatorDatabaseId(model.Populator);
+
+            var transaction = db.Database.BeginTransaction();
+
+            var latestVersion = db.SchemaVersions.Where(x => x.SchemaId == schema.Id).OrderByDescending(x => x.Version).FirstOrDefault();
+            if (latestVersion != null)
+            {
+                var fieldVersion = mapper.Map<SchemaFieldVersion>(newField);
+                fieldVersion.SchemaField = newField;
+
+                if (!string.IsNullOrWhiteSpace(model.Populator) && mm.PopulatorExists(model.Populator))
+                    fieldVersion.PopulatorId = mm.GetPopulatorDatabaseId(model.Populator);
+
+                latestVersion.Fields.Add(fieldVersion);
+            }
 
             schema.SchemaFields.Add(newField);
             try
@@ -83,11 +96,14 @@ namespace Trogsoft.Ectobi.DataService.Services
             }
             catch (Exception ex)
             {
+                transaction.Rollback();
                 return Success<SchemaFieldModel>.Error(ex.Message, ErrorCodes.ERR_UNSPECIFIED_ERROR);
             }
 
+            transaction.Commit();
+
             bg.Enqueue<IFieldService>(x => x.PopulateField(newField.Id));
-            
+
             var returnValue = mapper.Map<SchemaFieldModel>(newField);
             return new Success<SchemaFieldModel>(returnValue);
 
@@ -95,7 +111,7 @@ namespace Trogsoft.Ectobi.DataService.Services
 
         public void PopulateField(long fieldId)
         {
-            
+
         }
 
         public void AutoDetectSchemaFieldParameters(SchemaFieldEditModel x)

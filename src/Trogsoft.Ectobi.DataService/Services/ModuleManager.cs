@@ -49,7 +49,7 @@ namespace Trogsoft.Ectobi.DataService.Services
         public bool PopulatorExists(string populator) 
             => options.Populators.Any(x => x.Name.Equals(populator, StringComparison.CurrentCultureIgnoreCase));
 
-        internal long? GetPopulatorDatabaseId(string populator)
+        public long? GetPopulatorDatabaseId(string populator)
         {
             using (var scope = issf.CreateScope())
             {
@@ -58,6 +58,24 @@ namespace Trogsoft.Ectobi.DataService.Services
                     return db.Populators.SingleOrDefault(x => x.Name == populator)?.Id;
             }
             return null;
+        }
+
+        public IPopulator GetPopulator(string? name)
+        {
+
+            if (string.IsNullOrWhiteSpace(name)) throw new ArgumentNullException(nameof(name));
+            if (!PopulatorExists(name)) throw new Exception($"Populator {name} does not exist.");
+
+            var populatorType = options.Populators.SingleOrDefault(x => x.Name.Equals(name, StringComparison.CurrentCultureIgnoreCase));
+            if (populatorType == null) throw new Exception($"Populator {name} does not exist.");
+
+            using (var scope = issf.CreateScope())
+            {
+                var instance = (IPopulator)scope.ServiceProvider.GetService(populatorType);
+                if (instance == null) throw new Exception($"Unable to create instance of type {name}");
+                return instance;
+            }
+
         }
     }
 }

@@ -65,13 +65,40 @@ namespace ectobi
             return 0;
         }
 
+        [Operation("versions")]
+        public int ListVersions(string id)
+        {
+            var result = InstanceManager.Client.SchemaVersions.GetSchemaVersions(id).Result;
+            if (result.Result != null)
+                result.Result.ForEach(x => Console.WriteLine($"Version {x.Version} - {x.Name} (Created {x.Created})"));
+            else
+                WriteWarning("No items.");
+            return 0;
+        }
+
+        [Operation("newversion")]
+        public int CreateVersion(string name, string id)
+        {
+            var result = InstanceManager.Client.SchemaVersions.CreateSchemaVersion(new SchemaVersionEditModel
+            {
+                 Name = name,
+                  SchemaTid = id
+            }).Result;
+
+            if (result.Result != null)
+                Console.WriteLine($"Version {result.Result.Version} - {result.Result.Name} (Created {result.Result.Created})");
+            else
+                WriteWarning("No items.");
+            return 0;
+        }
+
         private void CreateModelFromExcelFile(SchemaEditModel model, string file)
         {
             var xl = new XLWorkbook(file);
             var ws = xl.Worksheets.FirstOrDefault();
 
             var columnCount = ws.ColumnsUsed().Count();
-            for (var x = 1; x < columnCount; x++)
+            for (var x = 1; x <= columnCount; x++)
             {
 
                 var value = ws.Cell(1, x).GetValue<string>();

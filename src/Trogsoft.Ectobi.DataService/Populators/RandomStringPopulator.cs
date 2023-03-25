@@ -6,10 +6,10 @@ namespace Trogsoft.Ectobi.DataService.Populators
 {
     public class RandomStringPopulator : IPopulator
     {
-        public string GetString(ValueMap values)
+        public string GetString()
         {
-            var count = values.GetValue<int>("length", 32);
-            return Convert.ToBase64String(RandomNumberGenerator.GetBytes(count));
+            //var count = values.GetValue<int>("length", 32);
+            return Convert.ToBase64String(RandomNumberGenerator.GetBytes(32));
         }
     }
 }

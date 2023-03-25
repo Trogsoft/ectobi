@@ -1,0 +1,159 @@
+$color: #000000;
+$toolbar: #d4d0c8;
+$highlight: #3a6fa5;
+$tb-dark: darken($toolbar, 15%);
+$darkgrey: $tb-dark;
+$vdark: #46494C;
+$mdark: #4C5C68;
+$btn: lighten($toolbar, 10%);
+
+$pad: 12px;
+
+html {
+    height: 100%;
+}
+
+body {
+    user-select: none;
+    font-family: 'Poppins';
+    font-size: 14px;
+    margin: 0;
+    height: 100%;
+}
+
+.hl {
+    background-color: $highlight;
+    color: white;
+
+    a {
+        color: white !important;
+    }
+}
+
+.app {
+
+    display: flex;
+    flex-direction: column;
+    height: 100%;
+
+    .toolbar {
+        background-color: $toolbar;
+        height: 30px;
+        padding: $pad;
+        display: flex;
+
+        .bi {
+            font-size: 16px;
+        }
+
+        button {
+            border-radius: $pad / 2;
+            border: 0;
+            margin-right: $pad;
+            background-color: $btn;
+        }
+
+        button:hover {
+            color: white;
+            background-color: $highlight;
+        }
+
+        .tb-divider {
+            border-left: 1px solid $tb-dark;
+            padding-right: $pad;
+        }
+
+        .btn-group {
+            display: flex;
+            margin-right: $pad;
+
+            button {
+                border-radius: 0;
+                margin-right: 0;
+            }
+
+            button+button {
+                border-left: 1px solid $toolbar;
+            }
+
+            button:first-of-type {
+                border-radius: $pad / 2 0 0 $pad/2;
+            }
+
+            button:last-of-type {
+                border-radius: 0 $pad / 2 $pad/2 0;
+            }
+        }
+
+    }
+
+    .main-panel {
+        width: 100%;
+        display: flex;
+        height: calc(100% - 60px - 30px);
+
+        .tree {
+            width: 30%;
+            border: 1px solid $tb-dark;
+            min-width: 250px;
+
+            ul {
+                padding: 0;
+                margin: 0;
+                padding-left: $pad / 2;
+                list-style-type: none;
+
+                li {
+                    padding: $pad / 3;
+                    a {
+                        text-decoration: none;
+                        color: #000000;
+                    }
+
+                    ul {
+                        margin-left: $pad;
+                    }
+                }
+            }
+
+        }
+
+        .main {
+            border-bottom: 1px solid $tb-dark;
+            max-width: 100%;
+            flex-grow: 1;
+        }
+    }
+
+    .status {
+        background-color: $toolbar;
+        height: 30px;
+    }
+
+}
+
+.tbl {
+    width: 100%;
+    border-collapse: collapse;
+    border-top: 1px solid $tb-dark;
+
+    tr {
+        th {
+            text-align: left;
+            background-color: $toolbar;
+            padding: $pad / 2;
+        }
+
+        td {
+            padding: $pad / 2;
+        }
+
+        border-bottom: 1px solid $toolbar;
+    }
+
+    tbody {
+        tr:hover {
+            background-color: lighten($highlight, 30%);
+        }
+    }
+}

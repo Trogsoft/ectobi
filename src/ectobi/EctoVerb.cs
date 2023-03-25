@@ -32,6 +32,12 @@ namespace ectobi
                 WriteSuccess("Success.");
                 if (success.Result == null) return success.ErrorCode;
 
+                if (success.Result is BackgroundTaskInfo bi)
+                {
+                    Console.WriteLine($"Background Task ID: {bi.Id}");
+                    return 0;
+                }
+
                 var resultType = success.Result.GetType();
                 var id = resultType.GetProperty("Id");
                 var tid = resultType.GetProperty("TextId");

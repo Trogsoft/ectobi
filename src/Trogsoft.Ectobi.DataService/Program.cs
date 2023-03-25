@@ -4,6 +4,7 @@ using Microsoft.EntityFrameworkCore;
 using System.Runtime.CompilerServices;
 using Trogsoft.Ectobi.Common.Interfaces;
 using Trogsoft.Ectobi.Data;
+using Trogsoft.Ectobi.DataService.Interfaces;
 using Trogsoft.Ectobi.DataService.Services;
 
 namespace Trogsoft.Ectobi.DataService
@@ -27,9 +28,14 @@ namespace Trogsoft.Ectobi.DataService
             builder.Services.AddTransient<IEventNotificationService, EventNotificationService>();
             builder.Services.AddTransient<ISchemaService, SchemaService>();
             builder.Services.AddTransient<IFieldService, FieldService>();
+            builder.Services.AddTransient<IBatchService, BatchService>();
+            builder.Services.AddTransient<ILookupService, LookupService>();
+            builder.Services.AddTransient<ILookupStorage, LookupStorage>();
             builder.Services.AddSingleton<IBackgroundTaskCoordinator, BackgroundTaskCoordinator>();
             builder.Services.AddTransient<IEctoMapper, EctoMapper>();
             builder.Services.AddControllers();
+
+            builder.Services.AddSignalR();
 
             var populators = DiscoverModules<IPopulator>(builder.Services);
 
@@ -74,7 +80,7 @@ namespace Trogsoft.Ectobi.DataService
 
             app.UseAuthorization();
 
-
+            app.MapHub<EventHub>("/events");
             app.MapControllers();
 
             app.Run();

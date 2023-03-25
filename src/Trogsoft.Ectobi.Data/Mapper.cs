@@ -3,6 +3,7 @@ using AutoMapper.Configuration.Conventions;
 using System;
 using System.Collections.Generic;
 using System.Linq;
+using System.Security.Cryptography.X509Certificates;
 using System.Text;
 using System.Threading.Tasks;
 using Trogsoft.Ectobi.Common;
@@ -22,6 +23,9 @@ namespace Trogsoft.Ectobi.Data
                 .ReverseMap()
                 .ForMember(x => x.Fields, y => y.MapFrom(z => z.SchemaFields));
 
+            cfg.CreateMap<SchemaVersion, SchemaVersionModel>()
+                .ReverseMap();
+
             cfg.CreateMap<SchemaEditModel, Schema>()
                 .ForMember(x => x.SchemaFields, y => y.MapFrom(z => z.Fields))
                 .ReverseMap();
@@ -30,8 +34,29 @@ namespace Trogsoft.Ectobi.Data
                 .Include<SchemaFieldEditModel, SchemaField>()
                 .ReverseMap();
 
+            cfg.CreateMap<SchemaFieldModel, SchemaFieldVersion>()
+                .ForMember(x => x.Id, y => y.Ignore())
+                .ReverseMap();
+
+            cfg.CreateMap<Schema, SchemaVersion>()
+                .ForMember(x => x.Id, y => y.Ignore())
+                .ForMember(x => x.Schema, y => y.Ignore())
+                .ForMember(x => x.Created, y => y.MapFrom(z => DateTime.Now))
+                .ForMember(x => x.Fields, y => y.Ignore())
+                .ReverseMap();
+
+            cfg.CreateMap<SchemaField, SchemaFieldVersion>()
+                .ForMember(x => x.Id, y => y.MapFrom(z => 0))
+                .ReverseMap();
+
+            cfg.CreateMap<SchemaFieldVersion, SchemaFieldVersion>()
+                .ForMember(x => x.Id, y => y.MapFrom(z => 0));
+
+            cfg.CreateMap<LookupSet, LookupSetModel>().ReverseMap();
+
+            cfg.CreateMap<LookupSetValue, LookupSetValueModel>().ReverseMap();
+
             cfg.CreateMap<SchemaFieldEditModel, SchemaField>()
-                .ForMember(x => x.Populator, y => y.Ignore())
                 .ReverseMap();
 
 

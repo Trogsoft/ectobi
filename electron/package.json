@@ -1,0 +1,17 @@
+{
+  "name": "ectobi-electron",
+  "version": "1.0.0",
+  "description": "Ectobi Electron App",
+  "main": "main.js",
+  "scripts": {
+    "start": "electron ."
+  },
+  "author": "Trogsoft Ltd",
+  "license": "MIT",
+  "devDependencies": {
+    "electron": "^23.2.0"
+  },
+  "dependencies": {
+    "reefjs": "^12.1.1"
+  }
+}

@@ -14,5 +14,6 @@ namespace Trogsoft.Ectobi.Common
         public static readonly int ERR_REQUIRED_VALUE_EMPTY = 0x0004;
         public static readonly int ERR_UNSPECIFIED_ERROR = 0x0005;
         public static readonly int? ERR_FIELD_ALREADY_EXISTS = 0x0006;
+        public static readonly int? ERR_BATCH_EXISTS = 0x0007;
     }
 }

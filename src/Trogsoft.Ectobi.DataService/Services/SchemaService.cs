@@ -13,13 +13,16 @@ namespace Trogsoft.Ectobi.DataService.Services
         private readonly EctoDb db;
         private readonly IEctoMapper mapper;
         private readonly IFieldService fields;
+        private readonly ILookupService lookup;
 
-        public SchemaService(ILogger<SchemaService> logger, EctoDb db, IEctoMapper mapper, IFieldService fields)
+        public SchemaService(ILogger<SchemaService> logger, EctoDb db, IEctoMapper mapper, IFieldService fields,
+            ILookupService lookup)
         {
             this.logger = logger;
             this.db = db;
             this.mapper = mapper;
             this.fields = fields;
+            this.lookup = lookup;
         }
 
         public async Task<Success<List<SchemaModel>>> GetSchemas(bool includeDetails = false)
@@ -58,26 +61,55 @@ namespace Trogsoft.Ectobi.DataService.Services
             if (model.AutoDetect)
                 model.Fields.ForEach(x => fields.AutoDetectSchemaFieldParameters(x));
 
-            model.Fields.ForEach(x => x.TextId = db.GetTextId<SchemaField>(x.Name));
+            var schemaTextId = db.GetTextId<Schema>(model.Name);
 
+            // Give each of the fields their own Text ID
+            model.Fields.ForEach(x => x.TextId = db.GetTextId<SchemaField>($"{schemaTextId}.{x.Name}"));
+
+            // Create the schema database entity and give it a Text ID
             var entity = mapper.Map<Schema>(model);
             entity.TextId = db.GetTextId<Schema>(model.Name);
 
+            // If any of the fields are of the type Set, create the supporting schema that contains the values of the set.
             foreach (var field in entity.SchemaFields.Where(x => x.Type == SchemaFieldType.Set))
             {
-                CreateSupportingSchema(entity, field);
+                LookupSetModel lsm = new LookupSetModel
+                {
+                    Name = field.Name,
+                    Description = $"Auto-created lookup set to support the schema {model.Name}"
+                };
+                await lookup.CreateLookupSet(lsm);
             }
 
+            // Make  the first version
+            var firstVersion = mapper.Map<SchemaVersion>(entity);
+            firstVersion.Version = 1;
+            firstVersion.Schema = entity;
+
+            foreach (var field in entity.SchemaFields)
+            {
+                var versionField = mapper.Map<SchemaFieldVersion>(field);
+                versionField.SchemaField = field;
+                firstVersion.Fields.Add(versionField);
+            }
+
+            var transaction = db.Database.BeginTransaction();
+
             db.Schemas.Add(entity);
+            db.SchemaVersions.Add(firstVersion);
+
             try
             {
                 await db.SaveChangesAsync();
-            } 
+            }
             catch (Exception ex)
             {
-                logger.LogError(ex, "Failed to save database changes");
+                logger.LogError(ex, "Failed to save database changes. No changes were made.");
+                transaction.Rollback();
                 return Success<SchemaModel>.Error(ex.Message, ErrorCodes.ERR_UNSPECIFIED_ERROR);
             }
+
+            transaction.Commit();
 
             return new Success<SchemaModel>(mapper.Map<SchemaModel>(entity));
 
@@ -105,40 +137,68 @@ namespace Trogsoft.Ectobi.DataService.Services
 
         }
 
-        private void CreateSupportingSchema(Schema entity, SchemaField? field)
+        public async Task<Success<SchemaVersionModel>> CreateSchemaVersion(SchemaVersionEditModel model)
         {
 
-            if (field == null) throw new ArgumentNullException(nameof(field));
-            if (string.IsNullOrWhiteSpace(field.Name)) throw new ArgumentNullException("field.name");
+            if (model == null) return Success<SchemaVersionModel>.Error("Model cannot be null.", ErrorCodes.ERR_ARGUMENT_NULL);
 
-            var schemaName = field.Name.Trim();
-            var tid = db.GetTextId<Schema>($"{entity.TextId}.{schemaName}");
+            if (string.IsNullOrWhiteSpace(model.SchemaTid))
+                return Success<SchemaVersionModel>.Error("SchemaTid cannot be null.", ErrorCodes.ERR_ARGUMENT_NULL);
 
-            var nschema = new Schema
+            var schema = db.Schemas.SingleOrDefault(x => x.TextId == model.SchemaTid);
+            if (schema == null)
+                return Success<SchemaVersionModel>.Error("Schema not found.", ErrorCodes.ERR_NOT_FOUND);
+
+            int newVersion = 1;
+            var schemaVersion = db.SchemaVersions.OrderBy(x => x.Version).LastOrDefault();
+            if (schemaVersion != null)
+                newVersion = schemaVersion.Version + 1;
+
+            logger.LogInformation($"Creating {schema.Name} schema version {newVersion}.");
+
+            var newSchema = new SchemaVersion
             {
-                Name = schemaName,
-                TextId = tid,
-                Description = $"Automatically created for the set of values in {tid}"
+                Created = DateTime.Now,
+                Name = model.Name ?? schemaVersion?.Name ?? schema.Name,
+                Description = schemaVersion?.Description ?? schema.Description,
+                SchemaId = schema.Id,
+                Version = newVersion
             };
 
-            nschema.SchemaFields.Add(new SchemaField
+            if (schemaVersion != null)
             {
-                TextId = db.GetTextId<SchemaField>($"{tid}.NumericId"),
-                Name = "Numeric ID",
-                Type = SchemaFieldType.Integer,
-                Flags = SchemaFieldFlags.NumericID
-            });
-
-            nschema.SchemaFields.Add(new SchemaField
+                foreach (var field in db.SchemaFieldVersions.Where(x => x.SchemaVersionId == schemaVersion.Id))
+                {
+                    var newField = mapper.Map<SchemaFieldVersion>(field);
+                    newField.Id = 0;
+                    newField.SchemaVersion = newSchema;
+                    newSchema.Fields.Add(newField);
+                }
+            }
+            else
             {
-                TextId = db.GetTextId<SchemaField>($"{tid}.Value"),
-                Name = "Value",
-                Type = SchemaFieldType.Text,
-                Flags = SchemaFieldFlags.DisplayValue
-            });
+                foreach (var field in db.SchemaFields.Where(x=>x.SchemaId == schema.Id))
+                    newSchema.Fields.Add(mapper.Map<SchemaFieldVersion>(field));
+            }
 
-            db.Schemas.Add(nschema);
-            field.ValuesFromSchema = nschema;
+            db.SchemaVersions.Add(newSchema);
+            await db.SaveChangesAsync();
+
+            return new Success<SchemaVersionModel>(true);
+
+        }
+
+        public async Task<Success<List<SchemaVersionModel>>> GetSchemaVersions(string schemaTid)
+        {
+
+            if (string.IsNullOrWhiteSpace(schemaTid))
+                return Success<List<SchemaVersionModel>>.Error("SchemaTid cannot be null.", ErrorCodes.ERR_ARGUMENT_NULL);
+
+            var schema = await db.Schemas.SingleOrDefaultAsync(x => x.TextId == schemaTid);
+            if (schema == null) return Success<List<SchemaVersionModel>>.Error("Schema not found.", ErrorCodes.ERR_NOT_FOUND);
+
+            var versions = await db.SchemaVersions.Where(x => x.SchemaId == schema.Id).Select(x => mapper.Map<SchemaVersionModel>(x)).ToListAsync();
+            return new Success<List<SchemaVersionModel>>(versions);
 
         }
 

@@ -8,6 +8,6 @@ namespace Trogsoft.Ectobi.Common.Interfaces
 {
     public interface IPopulator
     {
-        string GetString(ValueMap values);
+        string GetString();
     }
 }

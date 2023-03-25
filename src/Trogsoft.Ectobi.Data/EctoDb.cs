@@ -23,8 +23,12 @@ namespace Trogsoft.Ectobi.Data
         public DbSet<Process> Processes { get; set; }
         public DbSet<ProcessElement> ProcessElements { get; set; }
         public DbSet<Populator> Populators { get; set; }
+        public DbSet<SchemaVersion> SchemaVersions { get; set; }
+        public DbSet<SchemaFieldVersion> SchemaFieldVersions { get; set; }
+        public DbSet<LookupSet> LookupSets { get; set; }
+        public DbSet<LookupSetValue> LookupSetValues { get; set; }
 
-        public string GetTextId<TEntity>(string title) where TEntity : NamedEntity
+        public string GetTextId<TEntity>(string title, Func<TEntity, bool> qualifier = null!) where TEntity : NamedEntity
         {
             Regex rgx = new Regex("[^a-zA-Z0-9.-]");
             title = title.Trim();
@@ -54,7 +58,13 @@ namespace Trogsoft.Ectobi.Data
             modelBuilder.Entity<Value>(v =>
             {
                 v.HasOne(x => x.Record).WithMany(x => x.Values).HasForeignKey(x => x.RecordId).OnDelete(DeleteBehavior.Cascade);
-                v.HasOne(x => x.SchemaField).WithMany().HasForeignKey(x => x.SchemaFieldId).OnDelete(DeleteBehavior.Restrict);
+                v.HasOne(x => x.SchemaFieldVersion).WithMany().HasForeignKey(x => x.SchemaFieldVersionId).OnDelete(DeleteBehavior.Restrict);
+            });
+
+            modelBuilder.Entity<SchemaFieldVersion>(x =>
+            {
+                x.HasOne(x => x.SchemaVersion).WithMany(x => x.Fields).HasForeignKey(x => x.SchemaVersionId).OnDelete(DeleteBehavior.Cascade);
+                x.HasOne(x => x.SchemaField).WithMany().HasForeignKey(x => x.SchemaFieldId).OnDelete(DeleteBehavior.Restrict);
             });
 
         }

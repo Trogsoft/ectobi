@@ -11,9 +11,6 @@ namespace Trogsoft.Ectobi.Data
         public long? ValuesFromSchemaId { get; set; }
         public SchemaFieldType Type { get; set; }
         public SchemaFieldFlags Flags { get; set; }
-        public long? PopulatorId { get; set; }
-        public Populator? Populator { get; set; }
-        public long? ProcessId { get; set; }
-        public Process Process { get; set; }
+        public int DisplayOrder { get; set; }
     }
 }
