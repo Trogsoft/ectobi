@@ -1,7 +1,7 @@
 import { render } from './js/reef/reef.es.js';
-import { uiElement } from "./uiElement.js";
+import { baseComponent, coreComponent, uiComponent } from "./uiElement.js";
 
-class table extends uiElement {
+class table extends baseComponent {
 
     opts = {
         headers: {}
@@ -10,6 +10,7 @@ class table extends uiElement {
 
     #state = {
         rowCount: 0,
+        selectedItemCount: 0,
         selectedItemIndex: -1,
         selectedItem: null
     };
@@ -19,14 +20,11 @@ class table extends uiElement {
         this.opts = opts;
     }
 
-
-
     getState = () => this.#state;
 
-    setData(data) {
+    setData = (data) => {
         this.#data = data;
         this.#state.rowCount = this.#data.length;
-        this.render();
     }
 
     render() {
@@ -52,6 +50,8 @@ class table extends uiElement {
                 html += `<tr data-id="${rowId}" class="${i == this.#state.selectedItemIndex ? 'hl' : ''}">`;
                 Object.keys(this.opts.headers).forEach(k => {
                     var value = r[k];
+                    var header = this.opts.headers[k];
+                    if (header.format) value = header.format(r[k]);
                     html += `<td>${value}</td>`;
                 });
                 html += ' </tr>';
@@ -85,13 +85,21 @@ class table extends uiElement {
         if (idx > -1 && this.#state.selectedItemIndex != idx) {
             this.#state.selectedItemIndex = idx;
             this.#state.selectedItem = this.#data[idx];
+            this.#state.selectedItemCount = 1;
+            this.emit('tableStateChanged', this.#state);
             this.render();
         } else if (idx > -1 && this.#state.selectedItemIndex == idx) {
             this.#state.selectedItemIndex = -1;
             this.#state.selectedItem = null;
+            this.#state.selectedItemCount = 0;
+            this.emit('tableStateChanged', this.#state);
             this.render();
         }
 
+    }
+
+    setTarget(target) {
+        this.opts.target = target;
     }
 
     bind() {

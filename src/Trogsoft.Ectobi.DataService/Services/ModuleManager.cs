@@ -1,5 +1,6 @@
 ﻿using Microsoft.Extensions.Options;
 using Microsoft.OpenApi.Writers;
+using Trogsoft.Ectobi.Common;
 using Trogsoft.Ectobi.Common.Interfaces;
 using Trogsoft.Ectobi.Data;
 
@@ -46,7 +47,7 @@ namespace Trogsoft.Ectobi.DataService.Services
             }
         }
 
-        public bool PopulatorExists(string populator) 
+        public bool PopulatorExists(string populator)
             => options.Populators.Any(x => x.Name.Equals(populator, StringComparison.CurrentCultureIgnoreCase));
 
         public long? GetPopulatorDatabaseId(string populator)
@@ -75,6 +76,21 @@ namespace Trogsoft.Ectobi.DataService.Services
                 if (instance == null) throw new Exception($"Unable to create instance of type {name}");
                 return instance;
             }
+
+        }
+
+        public Success<List<PopulatorModel>> GetPopulatorDefinitions()
+        {
+
+            List<PopulatorModel> pops = new List<PopulatorModel>();
+            foreach (var populator in options.Populators)
+                pops.Add(new PopulatorModel
+                {
+                    Name = populator.Name,
+                    TextId = populator.FullName ?? populator.Name
+                });
+
+            return new Success<List<PopulatorModel>>(pops);
 
         }
     }

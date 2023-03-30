@@ -24,6 +24,27 @@ namespace Trogsoft.Ectobi.DataService.Services
             this.mm = mm;
         }
 
+        public async Task<Success<BatchModel>> CreateEmptyBatch(BatchModel model)
+        {
+
+            if (model == null) return Success<BatchModel>.Error("Model cannot be null.", ErrorCodes.ERR_ARGUMENT_NULL);
+            if (string.IsNullOrWhiteSpace(model.Name)) return Success<BatchModel>.Error("Model.Name cannot be null.", ErrorCodes.ERR_ARGUMENT_NULL);
+
+            var schema = db.Schemas.Include(x=>x.Versions).SingleOrDefault(x => x.TextId == model.SchemaTid);
+            if (schema == null) return Success<BatchModel>.Error("Schema not found.", ErrorCodes.ERR_NOT_FOUND);
+            if (!schema.Versions.Any()) return Success<BatchModel>.Error("No schema versions exist.", ErrorCodes.ERR_NOT_FOUND);
+
+            var newModel = mapper.Map<Batch>(model);
+            newModel.SchemaVersionId = schema.Versions.OrderByDescending(x => x.Version).FirstOrDefault()!.Id;
+            newModel.TextId = Guid.NewGuid().ToString();
+
+            db.Batches.Add(newModel);
+            await db.SaveChangesAsync();
+
+            return new Success<BatchModel>(mapper.Map<BatchModel>(newModel));
+
+        }
+
         public async Task<Success<BackgroundTaskInfo>> ImportBatch(ImportBatchModel model)
         {
             if (model == null) return Success<BackgroundTaskInfo>.Error("Model cannot be null", ErrorCodes.ERR_ARGUMENT_NULL);
@@ -34,6 +55,22 @@ namespace Trogsoft.Ectobi.DataService.Services
             BackgroundTaskInfo job = new BackgroundTaskInfo();
             bg.Enqueue<IBatchService>(x => x.BackgroundImportBatch(job, model));
             return new Success<BackgroundTaskInfo>(job);
+        }
+
+        public async Task<Success<List<BatchModel>>> GetBatches(string schemaTid)
+        {
+
+            if (string.IsNullOrWhiteSpace(schemaTid)) return Success<List<BatchModel>>.Error("Schema not specified.", ErrorCodes.ERR_ARGUMENT_NULL);
+
+            var schema = db.Schemas.SingleOrDefault(x => x.TextId == schemaTid);
+            if (schema == null) return Success<List<BatchModel>>.Error("Schema not found.", ErrorCodes.ERR_NOT_FOUND);
+
+            List<BatchModel> bm = new List<BatchModel>();
+            var batches = await db.Batches.Where(x => x.SchemaVersion.SchemaId == schema.Id).ToListAsync();
+            bm.AddRange(batches.Select(x => mapper.Map<BatchModel>(x)));
+
+            return new Success<List<BatchModel>>(bm);
+
         }
 
         public Success BackgroundImportBatch(BackgroundTaskInfo job, ImportBatchModel model)

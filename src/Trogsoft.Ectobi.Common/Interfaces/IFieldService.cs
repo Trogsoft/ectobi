@@ -11,7 +11,9 @@ namespace Trogsoft.Ectobi.Common.Interfaces
         void AutoDetectSchemaFieldParameters(SchemaFieldEditModel x);
         Task<Success<SchemaFieldModel>> CreateField(string schemaTid, SchemaFieldEditModel model);
         Task<Success> DeleteField(string schemaTid, string fieldName);
+        Task<Success<SchemaFieldEditModel>> GetField(string schemaTid, string fieldTid);
         Task<Success<List<SchemaFieldModel>>> GetFields(string schemaTid);
+        Task<Success<List<SchemaFieldModel>>> GetVersionFields(string schemaTid, int version);
         void PopulateField(long fieldId);
     }
 }

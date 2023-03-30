@@ -1,25 +1,81 @@
-const { app, BrowserWindow } = require('electron')
+const { app, BrowserWindow, ipcMain, dialog } = require('electron')
 const path = require('path')
 
+var mainWindow;
+
 const createWindow = () => {
-  const win = new BrowserWindow({
+
+  mainWindow = new BrowserWindow({
     icon: path.join(__dirname, 'img/icon.png'),
     width: 1366,
     height: 768,
     webPreferences: {
-        preload: path.join(__dirname, 'preload.js'),
+      preload: path.join(__dirname, 'preload.js'),
     },
   })
 
-  win.loadFile('index.html')
+  // win.webContents.setWindowOpenHandler(({ url, frameName }) => {
+  //   var options = {};
+
+  //   if (frameName === 'modal-narrow') {
+  //     options = Object.assign(options,{
+  //       width: 500,
+  //       height: 700
+  //     });
+  //   }
+
+  //   return {
+  //     action: 'allow',
+  //     overrideBrowserWindowOptions: Object.assign(options, {
+  //       frame: false,
+  //       modal: true,
+  //       parent: win,
+  //       fullscreenable: false
+  //     })
+  //   }
+  // })
+
+  mainWindow.loadFile('index.html')
 }
 
-app.whenReady().then(() => {    
-    createWindow()
+function openDialog(arg) {
+
+  var win = new BrowserWindow({
+    icon: path.join(__dirname, 'img/icon.png'),
+    width: arg.width || 500,
+    height: arg.height || 700,
+    modal: true,
+    frame: arg.frame || false,
+    parent: mainWindow,
+    resizable: arg.resizable || false,
+    webPreferences: {
+      preload: path.join(__dirname, '/preload.js'),
+    },
+  });
+
+  win.loadURL(`file://${__dirname}/dialogs/dialog.html`).then(x=>{
+    win.webContents.send('configuration',arg);
+  });
+
+  win.on('closed', x => {
+    win = null;
+  });
+
+}
+
+app.whenReady().then(() => {
+
+  ipcMain.handle('cunt', async (ev, arg) => {
+    openDialog(arg);
+  });
+
+  createWindow();
+
 });
 
+
 app.on('window-all-closed', () => {
-    if (process.platform !== 'darwin') {
-        app.quit();
-    }
+  if (process.platform !== 'darwin') {
+    app.quit();
+  }
 });

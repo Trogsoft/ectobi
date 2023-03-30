@@ -17,5 +17,13 @@ namespace Trogsoft.Ectobi.DataService.Controllers
         public async Task<IActionResult> Import([FromBody] ImportBatchModel model)
             => SuccessResponse(await batches.ImportBatch(model));
 
+        [HttpPost("empty")]
+        public async Task<IActionResult> CreateEmptyBatch([FromBody] BatchModel model) 
+            => SuccessResponse(await batches.CreateEmptyBatch(model));
+
+        [HttpGet("{schemaTid}")]
+        public async Task<IActionResult> GetBatchList(string schemaTid)
+            => SuccessResponse(await batches.GetBatches(schemaTid));
+
     }
 }

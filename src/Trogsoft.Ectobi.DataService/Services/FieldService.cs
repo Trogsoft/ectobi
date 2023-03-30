@@ -1,4 +1,5 @@
 ﻿using Microsoft.EntityFrameworkCore;
+using System;
 using Trogsoft.Ectobi.Common;
 using Trogsoft.Ectobi.Common.Interfaces;
 using Trogsoft.Ectobi.Data;
@@ -23,6 +24,37 @@ namespace Trogsoft.Ectobi.DataService.Services
             this.mapper = mapper;
             this.mm = mm;
             this.bg = bg;
+        }
+
+        public async Task<Success<SchemaFieldEditModel>> GetField(string schemaTid, string fieldTid)
+        {
+
+            if (string.IsNullOrWhiteSpace(schemaTid)) return Success<SchemaFieldEditModel>.Error("Schema not specified.", ErrorCodes.ERR_ARGUMENT_NULL);
+            if (string.IsNullOrWhiteSpace(fieldTid)) return Success<SchemaFieldEditModel>.Error("Field not specified.", ErrorCodes.ERR_ARGUMENT_NULL);
+
+            var schema = db.Schemas.SingleOrDefault(x => x.TextId == schemaTid);
+            if (schema == null) return Success<SchemaFieldEditModel>.Error("Schema version not found.", ErrorCodes.ERR_NOT_FOUND);
+
+            var latestVersion = db.SchemaVersions.Where(x => x.SchemaId == schema.Id).OrderByDescending(x => x.Version).FirstOrDefault();
+
+            var field = db.SchemaFieldVersions.SingleOrDefault(x => x.SchemaVersionId == latestVersion.Id && x.SchemaField.TextId == fieldTid);
+            if (field == null) return Success<SchemaFieldEditModel>.Error("Field not found.", ErrorCodes.ERR_NOT_FOUND);
+
+            return new Success<SchemaFieldEditModel>(mapper.Map<SchemaFieldEditModel>(field));
+
+        }
+
+        public async Task<Success<List<SchemaFieldModel>>> GetVersionFields(string schemaTid, int version)
+        {
+
+            var schemaVersion = db.SchemaVersions.SingleOrDefault(x=>x.Schema.TextId == schemaTid && x.Version == version);
+            if (schemaVersion == null) return Success<List<SchemaFieldModel>>.Error("Schema version not found.", ErrorCodes.ERR_NOT_FOUND);
+
+            var fields = await db.SchemaFieldVersions
+                .Where(x => x.SchemaVersion.Schema.TextId == schemaTid && x.SchemaVersion.Version == version)
+                .ToListAsync();
+            var list = fields.Select(x => mapper.Map<SchemaFieldModel>(x)).ToList();
+            return new Success<List<SchemaFieldModel>>(list);
         }
 
         public async Task<Success<List<SchemaFieldModel>>> GetFields(string schemaTid)

@@ -19,6 +19,29 @@ body {
     font-size: 14px;
     margin: 0;
     height: 100%;
+    max-width: 100%;
+    overflow: hidden;
+}
+
+body.dialog {
+    background-color: $toolbar;
+    border: 1px solid $tb-dark;
+    overflow: hidden;
+}
+
+.dlg-header {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    padding: $pad/2 $pad;
+
+    h1 {
+        margin: 0;
+    }
+
+    .close-dialog {
+        font-size: 18px;
+    }
 }
 
 .hl {
@@ -53,7 +76,7 @@ body {
             background-color: $btn;
         }
 
-        button:hover {
+        button:not(.disabled):hover {
             color: white;
             background-color: $highlight;
         }
@@ -61,6 +84,11 @@ body {
         .tb-divider {
             border-left: 1px solid $tb-dark;
             padding-right: $pad;
+        }
+
+        select.tb-select {
+            border: 1px solid $tb-dark;
+            border-radius: $pad / 2;
         }
 
         .btn-group {
@@ -93,9 +121,9 @@ body {
         height: calc(100% - 60px - 30px);
 
         .tree {
-            width: 30%;
+            width: 300px;
             border: 1px solid $tb-dark;
-            min-width: 250px;
+            min-width: 300px;
 
             ul {
                 padding: 0;
@@ -105,6 +133,7 @@ body {
 
                 li {
                     padding: $pad / 3;
+
                     a {
                         text-decoration: none;
                         color: #000000;
@@ -120,8 +149,10 @@ body {
 
         .main {
             border-bottom: 1px solid $tb-dark;
-            max-width: 100%;
+            max-width: calc(100% - 300px);
             flex-grow: 1;
+
+
         }
     }
 
@@ -154,6 +185,103 @@ body {
     tbody {
         tr:hover {
             background-color: lighten($highlight, 30%);
+        }
+    }
+}
+
+.btn.disabled {
+    color: $tb-dark;
+    cursor: not-allowed;
+}
+
+.mb {
+    margin-bottom: $pad / 2;
+}
+
+.row {
+    display: flex;
+    width: 100%;
+
+    .col-2 {
+        margin-right: $pad;
+        width: 50%;
+    }
+
+    .col-3 {
+        margin-right: $pad;
+        width: 33%;
+    }
+
+    .col-4 {
+        margin-right: $pad;
+        width: 25%;
+    }
+}
+
+
+.editor {
+    padding: $pad;
+    border-top: 1px solid $tb-dark;
+    min-height: 100%;
+    overflow: auto;
+
+    .editor-field {
+        display: flex;
+        flex-direction: column;
+
+        label {
+            font-weight: bold;
+        }
+
+        input,
+        select {
+            font-size: 16px;
+            padding: $pad / 2;
+            border: 1px solid $tb-dark;
+            border-radius: $pad / 3;
+        }
+
+        input:focus,
+        select:focus {
+            box-shadow: 0 0 $pad / 2 lighten($highlight, 20%);
+        }
+
+        input:focus-visible,
+        select:focus-visible {
+            outline: $highlight;
+        }
+    }
+}
+
+
+.tabs {
+    width: 100%;
+
+    .tab-row {
+        display: flex;
+        border-bottom: 1px solid $tb-dark;
+        max-width: 100%;
+        overflow-x: auto;
+        overflow-y: hidden;
+
+        .tab {
+            white-space: nowrap;
+            margin-top: 2px;
+            padding: $pad / 2;
+            background-color: lighten($highlight, 50%);
+            border-right: 1px solid $tb-dark;
+            color: black;
+            text-decoration: none;
+            border-top-right-radius: $pad;
+            .close-tab {
+                color: black;
+            }
+        }
+
+        .tab.active {
+            margin-bottom: -2px;
+            border-bottom: 2px solid $toolbar;
+            background-color: $toolbar;
         }
     }
 }

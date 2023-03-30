@@ -14,8 +14,15 @@ namespace Trogsoft.Ectobi.DataService.Controllers
             this.fields = fields;
         }
 
+        [HttpGet, Route("{schemaTid}/{fieldTid}")]
+        public async Task<IActionResult> GetFields(string schemaTid, string fieldTid) => SuccessResponse(await fields.GetField(schemaTid, fieldTid));
+
         [HttpGet, Route("{schemaTid}")]
         public async Task<IActionResult> GetFields(string schemaTid) => SuccessResponse(await fields.GetFields(schemaTid));
+
+        [HttpGet, Route("{schemaTid}/version/{version}")]
+        public async Task<IActionResult> GetVersionFields(string schemaTid, int version) 
+            => SuccessResponse(await fields.GetVersionFields(schemaTid, version));
 
         [HttpPost, Route("{schemaTid}")]
         public async Task<IActionResult> CreateField(string schemaTid, [FromBody] SchemaFieldEditModel model)

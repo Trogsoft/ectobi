@@ -49,6 +49,12 @@ namespace Trogsoft.Ectobi.Data
                 .ForMember(x => x.Id, y => y.MapFrom(z => 0))
                 .ReverseMap();
 
+            cfg.CreateMap<SchemaField, SchemaFieldEditModel>()
+                .ReverseMap();
+
+            cfg.CreateMap<SchemaFieldVersion, SchemaFieldEditModel>()
+                .ReverseMap();
+
             cfg.CreateMap<SchemaFieldVersion, SchemaFieldVersion>()
                 .ForMember(x => x.Id, y => y.MapFrom(z => 0));
 
@@ -59,6 +65,8 @@ namespace Trogsoft.Ectobi.Data
             cfg.CreateMap<SchemaFieldEditModel, SchemaField>()
                 .ReverseMap();
 
+            cfg.CreateMap<BatchModel, Batch>()
+                .ReverseMap();
 
         });
 

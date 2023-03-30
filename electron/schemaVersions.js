@@ -1,20 +1,16 @@
+import { ectoTabComponent } from './components.js';
 import { table } from './table.js';
-import { uiElement } from './uiElement.js';
 
-export class schemaVersions extends uiElement {
-
-    client;
-    ecto;
-    data;
+export class schemaVersions extends ectoTabComponent {
 
     versions;
     table;
+    idCode;
 
-    constructor(client, ecto, ...data) {
-        super();
-        this.client = client;
-        this.ecto = ecto;
-        this.data = data;
+    constructor(ecto, target, data) {
+        super(ecto, target, data);
+        this.idCode = data.path[0] + '-versions';
+
         this.table = new table({
             target: '.main',
             headers: {
@@ -30,7 +26,23 @@ export class schemaVersions extends uiElement {
             }
         });
 
-        this.ecto.toolbar.add('schemaVersions',
+    }
+
+    setTarget(target) {
+        this.target = target;
+        this.table.setTarget(target);
+    }
+
+    init(soft = false) {
+
+        if (!soft) {
+            this.ecto.client.schema.getVersions(this.data.path[0]).then(h => {
+                this.table.setData(h.result);
+                this.render();
+            });
+        }
+
+        this.ecto.toolbar.add(this.idCode,
             {
                 newSchemaVersion: {
                     type: 'button',
@@ -41,16 +53,16 @@ export class schemaVersions extends uiElement {
         );
     }
 
-    init() {
-        this.client.schema.getVersions(this.data[1]).then(h => {
-            this.table.setData(h.result);
-        });
-    }
+    getTitle = () => this.data.path[0].toUpperCase() + " Versions";
 
     beforeUnload() {
-        this.ecto.toolbar.clear('schemaVersions');
+        this.ecto.toolbar.clear(this.idCode);
     }
 
+    getIdCode = () => this.idCode;
+
     render() {
+        if (this.readyToRender())
+            this.table.render();
     }
 }

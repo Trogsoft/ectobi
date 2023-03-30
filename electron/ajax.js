@@ -24,6 +24,18 @@ const ajax = function (config) {
         return a;
     }
 
+    a.delete = function () {
+        var qs = '';
+        if (a.data) {
+            qs = Object.keys(a.data).map((key) => {
+                return encodeURIComponent(key) + '=' + encodeURIComponent(a.data[key])
+            }).join('&');
+        }
+        xhr.open('delete', a.url + (qs != '' ? '?' + qs : ''), true);
+        xhr.send();
+        return a;
+    }
+
     a.post = function () {
         var qs = '';
         if (a.data) {
