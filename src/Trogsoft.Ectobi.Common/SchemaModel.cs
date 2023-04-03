@@ -20,6 +20,7 @@ namespace Trogsoft.Ectobi.Common
         public bool Overwrite { get; set; } = false;
         public bool AutoDetect { get; set; } = true;
         public new List<SchemaFieldEditModel> Fields { get; set; } = new List<SchemaFieldEditModel>();
+        public BinaryFileModel File { get; set; } = new BinaryFileModel();
     }
 
 

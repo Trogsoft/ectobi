@@ -9,5 +9,7 @@ namespace Trogsoft.Ectobi.Common.Interfaces
     public interface ILookupService
     {
         Task<Success<LookupSetModel>> CreateLookupSet(LookupSetModel model);
+        Task<Success<LookupSetModel>> GetLookupSet(string lookupTid);
+        Task<Success<List<LookupSetModel>>> GetLookupSets();
     }
 }

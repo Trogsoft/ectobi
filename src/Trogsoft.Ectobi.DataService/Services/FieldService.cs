@@ -16,14 +16,46 @@ namespace Trogsoft.Ectobi.DataService.Services
         private readonly IEctoMapper mapper;
         private readonly ModuleManager mm;
         private readonly IBackgroundTaskCoordinator bg;
+        private readonly IWebHookService iwh;
 
-        public FieldService(ILogger<FieldService> logger, EctoDb db, IEctoMapper mapper, ModuleManager mm, IBackgroundTaskCoordinator bg)
+        public FieldService(ILogger<FieldService> logger, EctoDb db, IEctoMapper mapper, ModuleManager mm, IBackgroundTaskCoordinator bg,
+            IWebHookService iwh)
         {
             this.logger = logger;
             this.db = db;
             this.mapper = mapper;
             this.mm = mm;
             this.bg = bg;
+            this.iwh = iwh;
+        }
+
+        private async Task<Success<T>> validateSchema<T>(string schemaTid)
+        {
+
+            if (string.IsNullOrWhiteSpace(schemaTid)) return Success<T>.Error("Schema not specified.", ErrorCodes.ERR_ARGUMENT_NULL);
+
+            var schema = db.Schemas.SingleOrDefault(x => x.TextId == schemaTid);
+            if (schema == null) return Success<T>.Error("Schema not found.", ErrorCodes.ERR_NOT_FOUND);
+
+            return new Success<T>(true);
+
+        }
+
+        private async Task<Success<T>> validateField<T>(string schemaTid,  string fieldTid)
+        {
+
+            if (string.IsNullOrWhiteSpace(fieldTid)) return Success<T>.Error("Field not specified.", ErrorCodes.ERR_ARGUMENT_NULL);
+
+            var schemaResult = await validateSchema<T>(schemaTid);
+            if (!schemaResult.Succeeded) return schemaResult;
+
+            var latestVersion = db.SchemaVersions.Where(x => x.Schema.TextId == schemaTid).OrderByDescending(x => x.Version).FirstOrDefault();
+            if (latestVersion == null) return Success<T>.Error("Schema has no versions.");
+
+            var field = db.SchemaFieldVersions.SingleOrDefault(x => x.SchemaVersionId == latestVersion.Id && x.SchemaField.TextId == fieldTid);
+            if (field == null) return Success<T>.Error("Field not found.", ErrorCodes.ERR_NOT_FOUND);
+
+            return new Success<T>(true);
         }
 
         public async Task<Success<SchemaFieldEditModel>> GetField(string schemaTid, string fieldTid)
@@ -33,9 +65,10 @@ namespace Trogsoft.Ectobi.DataService.Services
             if (string.IsNullOrWhiteSpace(fieldTid)) return Success<SchemaFieldEditModel>.Error("Field not specified.", ErrorCodes.ERR_ARGUMENT_NULL);
 
             var schema = db.Schemas.SingleOrDefault(x => x.TextId == schemaTid);
-            if (schema == null) return Success<SchemaFieldEditModel>.Error("Schema version not found.", ErrorCodes.ERR_NOT_FOUND);
+            if (schema == null) return Success<SchemaFieldEditModel>.Error("Schema not found.", ErrorCodes.ERR_NOT_FOUND);
 
             var latestVersion = db.SchemaVersions.Where(x => x.SchemaId == schema.Id).OrderByDescending(x => x.Version).FirstOrDefault();
+            if (latestVersion == null) return Success<SchemaFieldEditModel>.Error("Schema has no versions.");
 
             var field = db.SchemaFieldVersions.SingleOrDefault(x => x.SchemaVersionId == latestVersion.Id && x.SchemaField.TextId == fieldTid);
             if (field == null) return Success<SchemaFieldEditModel>.Error("Field not found.", ErrorCodes.ERR_NOT_FOUND);
@@ -44,10 +77,20 @@ namespace Trogsoft.Ectobi.DataService.Services
 
         }
 
+        public async Task<Success<SchemaFieldModel>> EditField(string schemaTid, string fieldTid, SchemaFieldEditModel model)
+        {
+            if (model == null) return Success<SchemaFieldModel>.Error("Model cannot be null.", ErrorCodes.ERR_ARGUMENT_NULL);
+            var field = db.SchemaFieldVersions.SingleOrDefault(x => x.TextId == model.TextId);
+
+            // Values that require a new version
+            throw new NotImplementedException();
+
+        }
+
         public async Task<Success<List<SchemaFieldModel>>> GetVersionFields(string schemaTid, int version)
         {
 
-            var schemaVersion = db.SchemaVersions.SingleOrDefault(x=>x.Schema.TextId == schemaTid && x.Version == version);
+            var schemaVersion = db.SchemaVersions.SingleOrDefault(x => x.Schema.TextId == schemaTid && x.Version == version);
             if (schemaVersion == null) return Success<List<SchemaFieldModel>>.Error("Schema version not found.", ErrorCodes.ERR_NOT_FOUND);
 
             var fields = await db.SchemaFieldVersions
@@ -55,6 +98,7 @@ namespace Trogsoft.Ectobi.DataService.Services
                 .ToListAsync();
             var list = fields.Select(x => mapper.Map<SchemaFieldModel>(x)).ToList();
             return new Success<List<SchemaFieldModel>>(list);
+
         }
 
         public async Task<Success<List<SchemaFieldModel>>> GetFields(string schemaTid)
@@ -81,6 +125,7 @@ namespace Trogsoft.Ectobi.DataService.Services
             try
             {
                 await db.SaveChangesAsync();
+                await iwh.Dispatch(WebHookEventType.FieldDeleted, new { schema = schemaTid, field = fieldName });
             }
             catch (Exception ex)
             {
@@ -125,6 +170,7 @@ namespace Trogsoft.Ectobi.DataService.Services
             try
             {
                 await db.SaveChangesAsync();
+                await iwh.Dispatch(WebHookEventType.FieldCreated, mapper.Map<SchemaFieldModel>(newField));
             }
             catch (Exception ex)
             {

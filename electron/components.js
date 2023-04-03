@@ -33,6 +33,9 @@ export class ectoCoreComponent extends ectoComponent {
     render() {        
     }
 
+    init() {
+    }
+
     setTarget(newTarget) {
         this.target = newTarget;
     }
@@ -62,7 +65,8 @@ export class ectoTabComponent extends ectoCoreComponent {
     beforeUnload() {        
     }
 
-    init(soft = false) {        
+    init(soft = false) { 
+        super.init();       
     }
 
     getTitle = () => "Component";

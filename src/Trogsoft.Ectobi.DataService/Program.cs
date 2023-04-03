@@ -1,6 +1,7 @@
 using Hangfire;
 using Hangfire.SqlServer;
 using Microsoft.EntityFrameworkCore;
+using Microsoft.EntityFrameworkCore.Internal;
 using System.Runtime.CompilerServices;
 using Trogsoft.Ectobi.Common.Interfaces;
 using Trogsoft.Ectobi.Data;
@@ -31,6 +32,8 @@ namespace Trogsoft.Ectobi.DataService
             builder.Services.AddTransient<IBatchService, BatchService>();
             builder.Services.AddTransient<ILookupService, LookupService>();
             builder.Services.AddTransient<ILookupStorage, LookupStorage>();
+            builder.Services.AddTransient<IWebHookService, WebHookService>();
+            builder.Services.AddTransient<IFileTranslatorService, FileTranslatorService>();
             builder.Services.AddSingleton<IBackgroundTaskCoordinator, BackgroundTaskCoordinator>();
             builder.Services.AddTransient<IEctoMapper, EctoMapper>();
             builder.Services.AddControllers();
@@ -38,11 +41,12 @@ namespace Trogsoft.Ectobi.DataService
             builder.Services.AddSignalR();
 
             var populators = DiscoverModules<IPopulator>(builder.Services);
+            var fileHandlers = DiscoverModules<IFileHandler>(builder.Services);
 
-            builder.Services.Configure<ModuleOptions>(opt =>
-            {
-                opt.Populators.AddRange(populators);
-            });
+            builder.Services.AddHttpClient("webhook");
+
+            builder.Services.Configure<ModuleOptions>(opt => opt.Populators.AddRange(populators));
+            builder.Services.Configure<ModuleOptions>(opt => opt.FileImporters.AddRange(fileHandlers));
             builder.Services.AddSingleton<ModuleManager>();
 
             builder.Services.AddHangfire(configuration => configuration

@@ -1,7 +1,7 @@
 import { render } from './js/reef/reef.es.js';
-import { ectoComponent } from "./components.js";
+import { ectoComponent, ectoCoreComponent } from "./components.js";
 
-export class ectoToolbar extends ectoComponent {
+export class ectoToolbar extends ectoCoreComponent {
 
     controls = {};
 
@@ -34,10 +34,7 @@ export class ectoToolbar extends ectoComponent {
         var html = `
             <button class="tb-btn" title="Connect to..."><i class="bi bi-server"></i></button>
             <div class="tb-divider"></div>
-            <div class="btn-group">
-                <button title="Create a new blank schema" class="tb-btn"><i class="bi bi-table"></i> New Schema</button>
-                <button title="Create a new schema from a file" class="tb-btn"><i class="bi bi-cloud-plus-fill"></i> From File...</button>
-            </div>
+            <button title="Create a new blank schema" class="tb-btn new-schema"><i class="bi bi-table"></i> New Schema...</button>
         `;
 
         var renderControl = (id, c) => {
@@ -53,7 +50,7 @@ export class ectoToolbar extends ectoComponent {
             if (c.type == 'select') {
                 var html = `<select data-control-id="${id}" class="tb-select ${enabled ? '' : 'disabled'}">`;
                 if (c.options) {
-                    c.options.forEach(opt=>{
+                    c.options.forEach(opt => {
                         html += `<option value="${opt.textId}">${opt.name}</option>`;
                     });
                 }
@@ -91,5 +88,10 @@ export class ectoToolbar extends ectoComponent {
             c.removeEventListener('click', this.handleControlClick);
             c.addEventListener('click', this.handleControlClick);
         });
+
+        el.querySelectorAll('.new-schema').forEach(c=>{
+            c.removeEventListener('click', this.ecto.createNewSchema);
+            c.addEventListener('click', this.ecto.createNewSchema);
+        })
     }
 }

@@ -14,14 +14,16 @@ namespace Trogsoft.Ectobi.DataService.Services
         private readonly IEctoMapper mapper;
         private readonly IBackgroundTaskCoordinator bg;
         private readonly ModuleManager mm;
+        private readonly IWebHookService iwh;
 
-        public BatchService(ILogger<BatchService> logger, EctoDb db, IEctoMapper mapper, IBackgroundTaskCoordinator bg, ModuleManager mm)
+        public BatchService(ILogger<BatchService> logger, EctoDb db, IEctoMapper mapper, IBackgroundTaskCoordinator bg, ModuleManager mm, IWebHookService iwh)
         {
             this.logger = logger;
             this.db = db;
             this.mapper = mapper;
             this.bg = bg;
             this.mm = mm;
+            this.iwh = iwh;
         }
 
         public async Task<Success<BatchModel>> CreateEmptyBatch(BatchModel model)
@@ -40,6 +42,7 @@ namespace Trogsoft.Ectobi.DataService.Services
 
             db.Batches.Add(newModel);
             await db.SaveChangesAsync();
+            iwh.Dispatch(WebHookEventType.BatchCreated, mapper.Map<BatchModel>(newModel)).Wait();
 
             return new Success<BatchModel>(mapper.Map<BatchModel>(newModel));
 
@@ -53,7 +56,7 @@ namespace Trogsoft.Ectobi.DataService.Services
             if (schema == null) return Success<BackgroundTaskInfo>.Error("Schema not found.", ErrorCodes.ERR_NOT_FOUND);
 
             BackgroundTaskInfo job = new BackgroundTaskInfo();
-            bg.Enqueue<IBatchService>(x => x.BackgroundImportBatch(job, model));
+            bg.Enqueue<IBatchService>(x => x.BackgroundImportBatch(job, model));            
             return new Success<BackgroundTaskInfo>(job);
         }
 
@@ -147,6 +150,8 @@ namespace Trogsoft.Ectobi.DataService.Services
 
             batch.Flags = BatchFlags.Processing;
             db.SaveChanges();
+
+            iwh.Dispatch(WebHookEventType.BatchCreated, mapper.Map<BatchModel>(batch)).Wait();
 
             transaction.Commit();
 

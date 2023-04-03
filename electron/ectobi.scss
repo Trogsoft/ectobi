@@ -7,11 +7,15 @@ $vdark: #46494C;
 $mdark: #4C5C68;
 $btn: lighten($toolbar, 10%);
 
+$danger: #a14b4b;
+$success: #50b450;
+
 $pad: 12px;
 
 html {
     height: 100%;
 }
+
 
 body {
     user-select: none;
@@ -24,9 +28,41 @@ body {
 }
 
 body.dialog {
-    background-color: $toolbar;
+    background-color: white;
     border: 1px solid $tb-dark;
     overflow: hidden;
+}
+
+.btn {
+    border-radius: $pad / 2;
+    border: 1px solid $tb-dark;
+    padding: $pad;
+    margin-right: $pad;
+    text-align: center;
+    background-color: $btn;
+    transition: background-color 250ms, color 250ms;
+}
+
+.btn:not(.disabled):hover {
+    color: white;
+    background-color: $tb-dark;
+}
+
+$btn-styles: "danger"$danger,
+    "success"$success;
+
+@each $style,
+$col in $btn-styles {
+    .btn-#{$style} {
+        background-color: #{$col};
+        color: white;
+    }
+
+    $dark: darken($col, 20%);
+
+    .btn-#{$style}:not(.disabled):hover {
+        background-color: $dark;
+    }
 }
 
 .dlg-header {
@@ -42,6 +78,17 @@ body.dialog {
     .close-dialog {
         font-size: 18px;
     }
+}
+
+.dlg-button-row {
+    padding: $pad;
+    display: flex;
+    justify-content: space-between;
+    position: fixed;
+    bottom: 1px;
+    left: 1px;
+    right: 1px;
+    background-color: lighten($toolbar, 15%);
 }
 
 .hl {
@@ -72,6 +119,7 @@ body.dialog {
         button {
             border-radius: $pad / 2;
             border: 0;
+            padding: 0 6px;
             margin-right: $pad;
             background-color: $btn;
         }
@@ -224,6 +272,8 @@ body.dialog {
     border-top: 1px solid $tb-dark;
     min-height: 100%;
     overflow: auto;
+    position: relative;
+    box-sizing: border-box;
 
     .editor-field {
         display: flex;
@@ -251,11 +301,27 @@ body.dialog {
             outline: $highlight;
         }
     }
+
+    .editor-buttons {
+        padding: $pad;
+        background-color: lighten($toolbar, 15%);
+        position: absolute;
+        display: flex;
+        justify-content: space-between;
+        border-bottom: 1px solid $tb-dark;
+        bottom: 0;
+        left: 0;
+        right: 0;
+    }
+
 }
 
 
 .tabs {
     width: 100%;
+    box-sizing: border-box;
+    display: flex;
+    flex-direction: column;
 
     .tab-row {
         display: flex;
@@ -273,6 +339,7 @@ body.dialog {
             color: black;
             text-decoration: none;
             border-top-right-radius: $pad;
+
             .close-tab {
                 color: black;
             }
@@ -283,5 +350,136 @@ body.dialog {
             border-bottom: 2px solid $toolbar;
             background-color: $toolbar;
         }
+    }
+
+    .tab-content {
+        box-sizing: border-box;
+        height: 100%;
+    }
+
+}
+
+#content {
+    padding: $pad * 1.5;
+}
+
+.form-field {
+    margin-right: $pad;
+    margin-bottom: $pad;
+
+    label {
+        width: 100%;
+    }
+
+    .form-control {
+        width: 100%;
+    }
+
+    input.form-control,
+    select.form-control,
+    textarea.form-control {
+        font-size: 16px;
+        padding: $pad / 2;
+        border: 1px solid $tb-dark;
+        border-radius: $pad / 3;
+    }
+
+    input.form-control:focus,
+    select.form-control:focus,
+    textarea.form-control:focus {
+        box-shadow: 0 0 $pad / 2 lighten($highlight, 20%);
+    }
+
+    input.form-control:focus-visible,
+    select.form-control:focus-visible,
+    textarea.form-control:focus-visible {
+        outline: $highlight;
+    }
+}
+
+.form-field-oneline {
+    display: flex;
+    margin-bottom: $pad;
+    justify-content: space-between;
+    align-items: baseline;
+
+    label {
+        width: 40%;
+        margin-right: $pad;
+        font-weight: bold;
+        text-align: right;
+    }
+
+    >* {
+        width: 100%;
+        flex-grow: 1;
+        text-align: left;
+    }
+
+    .form-field-text {
+        margin: 0;
+    }
+
+    .form-field-list {
+        overflow: auto;
+        border: 1px solid $tb-dark;
+        list-style-type: none;
+        margin: 0;
+        padding: 0;
+        max-height: 45vh;
+
+        li {
+            margin: 0;
+            padding: $pad;
+            display: flex;
+        }
+
+        li:not(:last-of-type) {
+            border-bottom: 1px solid $tb-dark;
+        }
+    }
+}
+
+@for $i from 1 through 5 {
+    
+    .p-#{$i} {
+        padding: $pad * $i;
+    }
+
+    .ps-#{$i} {
+        padding-left: $pad * $i;
+    }
+
+    .pe-#{$i} {
+        padding-right: $pad * $i;
+    }
+
+    .pt-#{$i} {
+        padding-top: $pad * $i;
+    }
+
+    .pb-#{$i} {
+        padding-bottom: $pad * $i;
+    }
+
+    .ms-#{$i} {
+        margin-bottom: $pad * $i;
+    }
+
+    .mt-#{$i} {
+        margin-top: $pad * $i;
+    }
+
+    .mb-#{$i} {
+        margin-bottom: $pad * $i;
+    }
+
+    .me-#{$i} {
+        margin-right: $pad * $i;
+    }
+
+    .flex-grow-#{$i},
+    .fg-#{$i} {
+        flex-grow: $i;
     }
 }

@@ -56,6 +56,16 @@ class ectobi extends ectoComponent {
         this.tree.bind();
     }
 
+    createNewSchema = (e) => {
+        window.ipc.openDialog({
+            dialogType: 'newSchemaDialog',
+            width: 600,
+            height: 425
+        }, result => {
+            console.log(result);
+        });
+    }
+
     navigate = (e) => {
         e.preventDefault();
         var el = e.currentTarget;

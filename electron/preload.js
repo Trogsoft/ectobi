@@ -1,5 +1,6 @@
 const { contextBridge, ipcRenderer } = require('electron')
 
 contextBridge.exposeInMainWorld('ipc', {
-  openDialog: (arg) => ipcRenderer.invoke('cunt', arg)
+  openDialog: (arg) => ipcRenderer.invoke('openDialog', arg),
+  confirm: (arg) => ipcRenderer.invoke('getConfirmation', arg)
 })

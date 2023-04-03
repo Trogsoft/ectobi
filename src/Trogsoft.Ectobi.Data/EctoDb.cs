@@ -27,6 +27,10 @@ namespace Trogsoft.Ectobi.Data
         public DbSet<SchemaFieldVersion> SchemaFieldVersions { get; set; }
         public DbSet<LookupSet> LookupSets { get; set; }
         public DbSet<LookupSetValue> LookupSetValues { get; set; }
+        public DbSet<Period> Periods { get; set; }
+        public DbSet<Stage> Stages { get; set; }
+        public DbSet<WebHookEvent> WebHookEvents { get; set; }
+        public DbSet<WebHook> WebHooks {  get; set; }
 
         public string GetTextId<TEntity>(string title, Func<TEntity, bool> qualifier = null!) where TEntity : NamedEntity
         {

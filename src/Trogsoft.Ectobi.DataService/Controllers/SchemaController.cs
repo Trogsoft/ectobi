@@ -23,6 +23,9 @@ namespace Trogsoft.Ectobi.DataService.Controllers
         [HttpGet]
         public async Task<IActionResult> ListSchemas(bool includeDetail = false) => SuccessResponse(await schema.GetSchemas(includeDetail));
 
+        [HttpGet("{textId}")]
+        public async Task<IActionResult> GetSchema(string textId) => SuccessResponse(await schema.GetSchema(textId));
+
         // Versions
 
         [HttpGet("{schemaTid}/versions")]

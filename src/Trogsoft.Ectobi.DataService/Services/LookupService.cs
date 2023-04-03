@@ -1,4 +1,5 @@
-﻿using Trogsoft.Ectobi.Common;
+﻿using Microsoft.EntityFrameworkCore;
+using Trogsoft.Ectobi.Common;
 using Trogsoft.Ectobi.Common.Interfaces;
 using Trogsoft.Ectobi.Data;
 using Trogsoft.Ectobi.DataService.Interfaces;
@@ -18,6 +19,30 @@ namespace Trogsoft.Ectobi.DataService.Services
             this.db = db;
             this.mapper = mapper;
             this.ils = ils;
+        }
+
+        public async Task<Success<List<LookupSetModel>>> GetLookupSets()
+        {
+
+            List<LookupSetModel> model = new List<LookupSetModel>();
+
+            foreach (var ls in await db.LookupSets.Include(x=>x.Values).ToListAsync())
+                model.Add(mapper.Map<LookupSetModel>(ls));
+
+            return new Success<List<LookupSetModel>>(model);
+
+        }
+
+        public async Task<Success<LookupSetModel>> GetLookupSet(string lookupTid)
+        {
+
+            if (string.IsNullOrWhiteSpace(lookupTid)) return Success<LookupSetModel>.Error("LookupTid cannot be null.", ErrorCodes.ERR_ARGUMENT_NULL);
+
+            var lookup = await db.LookupSets.Include(x => x.Values).SingleOrDefaultAsync(x => x.TextId == lookupTid);
+            if (lookup == null) return Success<LookupSetModel>.Error("Lookup set not found.", ErrorCodes.ERR_NOT_FOUND);
+
+            return new Success<LookupSetModel>(mapper.Map<LookupSetModel>(lookup));
+
         }
 
         public async Task<Success<LookupSetModel>> CreateLookupSet(LookupSetModel model)

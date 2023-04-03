@@ -1,8 +1,10 @@
-﻿using Microsoft.EntityFrameworkCore;
+﻿using Hangfire.Annotations;
+using Microsoft.EntityFrameworkCore;
 using System.Runtime.CompilerServices;
 using Trogsoft.Ectobi.Common;
 using Trogsoft.Ectobi.Common.Interfaces;
 using Trogsoft.Ectobi.Data;
+using Trogsoft.Ectobi.Data.Migrations;
 
 namespace Trogsoft.Ectobi.DataService.Services
 {
@@ -14,15 +16,19 @@ namespace Trogsoft.Ectobi.DataService.Services
         private readonly IEctoMapper mapper;
         private readonly IFieldService fields;
         private readonly ILookupService lookup;
+        private readonly IWebHookService iwh;
+        private readonly IFileTranslatorService fts;
 
         public SchemaService(ILogger<SchemaService> logger, EctoDb db, IEctoMapper mapper, IFieldService fields,
-            ILookupService lookup)
+            ILookupService lookup, IWebHookService iwh, IFileTranslatorService fts)
         {
             this.logger = logger;
             this.db = db;
             this.mapper = mapper;
             this.fields = fields;
             this.lookup = lookup;
+            this.iwh = iwh;
+            this.fts = fts;
         }
 
         public async Task<Success<List<SchemaModel>>> GetSchemas(bool includeDetails = false)
@@ -54,6 +60,16 @@ namespace Trogsoft.Ectobi.DataService.Services
                 var existingSchema = db.Schemas.SingleOrDefault(x => x.Name == model.Name);
                 if (existingSchema != null)
                     db.Schemas.Remove(existingSchema);
+            }
+
+            // Check if we need to use the file or if it's been done for us
+            if (model.File != null)
+            {
+                var sfemResult = await fts.GetSchemaFieldEditModelCollection(model.File);
+                if (sfemResult.Succeeded)
+                    model.Fields = sfemResult.Result;
+                else
+                    return Success<SchemaModel>.Error(sfemResult.StatusMessage ?? "Unknown error when translating file.", ErrorCodes.ERR_FILE_PROCESSING_PROBLEM);
             }
 
             logger.LogInformation($"Creating schema {model.Name}.");
@@ -101,6 +117,7 @@ namespace Trogsoft.Ectobi.DataService.Services
             try
             {
                 await db.SaveChangesAsync();
+                await iwh.Dispatch(WebHookEventType.SchemaCreated, entity);
             }
             catch (Exception ex)
             {
@@ -112,6 +129,17 @@ namespace Trogsoft.Ectobi.DataService.Services
             transaction.Commit();
 
             return new Success<SchemaModel>(mapper.Map<SchemaModel>(entity));
+
+        }
+
+        public async Task<Success<SchemaModel>> GetSchema(string textId)
+        {
+            if (string.IsNullOrWhiteSpace(textId)) return Success<SchemaModel>.Error("Argument null: textId", ErrorCodes.ERR_ARGUMENT_NULL);
+
+            var schema = await db.Schemas.SingleOrDefaultAsync(x => x.TextId == textId);
+            if (schema == null) return Success<SchemaModel>.Error("Schema not found.", ErrorCodes.ERR_NOT_FOUND);
+
+            return new Success<SchemaModel>(mapper.Map<SchemaModel>(schema));
 
         }
 

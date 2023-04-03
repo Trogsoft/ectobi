@@ -7,25 +7,34 @@ export class ectoTree extends ectoCoreComponent {
 
     constructor(ecto, target) {
         super(ecto, target);
-        ecto.client.schema.list().then(h => {
+        this.init();
+    }
+
+    init() {
+        this.ecto.client.schema.list().then(h => {
             this.schemas = h.result;
             this.render();
-        });
+        });        
     }
 
     render() {
         var html = '<ul>';
 
-        var link = (url, icon, label, classes = 'navigate') => {
+        var link = (url, icon, label, excludeEndTag = false, classes = 'navigate') => {
             var selected = this.ecto.treeNode == url;
-            return `<li class="${selected ? 'hl' : ''}">
+            var html = `<li class="${selected ? 'hl' : ''}">
                 <i class="bi ${icon}"></i> 
                 <a href="${url}" class="${classes}">${label}</a>
-            </li>`;
+            `;
+            if (!excludeEndTag)
+                html += '</li>';
+            return html;
         };
 
+        html += `<li>${link('lookupManager', 'bi-table', 'Lookup Tables')}</li>`;
+
         this.schemas.forEach(s => {
-            html += `<li><i class="bi bi-folder"></i> ${s.name}<ul>
+            html += `<li>${link('schemaDetail/' + s.textId, 'bi-folder', s.name, true)}<ul>
                 ${link('schemaData/' + s.textId, 'bi-file-plus-fill', 'Data')}
                 ${link('schemaUploads/' + s.textId, 'bi-card-list', 'Uploads')}
                 ${link('schemaVersions/' + s.textId, 'bi-card-list', 'Versions')}

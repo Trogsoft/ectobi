@@ -11,6 +11,7 @@ namespace Trogsoft.Ectobi.Common.Interfaces
         Task<Success<SchemaModel>> CreateSchema(SchemaEditModel model);
         Task<Success<SchemaVersionModel>> CreateSchemaVersion(SchemaVersionEditModel model);
         Task<Success> DeleteSchema(string schemaTextId);
+        Task<Success<SchemaModel>> GetSchema(string textId);
         Task<Success<List<SchemaModel>>> GetSchemas(bool includeDetails = false);
         Task<Success<List<SchemaVersionModel>>> GetSchemaVersions(string schemaTid);
     }

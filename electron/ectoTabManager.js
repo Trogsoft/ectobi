@@ -3,6 +3,8 @@ import { ectoCoreComponent } from './components.js';
 import { schemaFieldEditor, schemaFields } from "./schemaFields.js";
 import { schemaVersions } from "./schemaVersions.js";
 import { schemaRecordEditor, schemaUploads } from './schemaUploads.js';
+import { lookupManager } from './lookupManager.js';
+import { schemaDetail } from './schemaDetail.js';
 
 export class ectoTabManager extends ectoCoreComponent {
 
@@ -11,7 +13,9 @@ export class ectoTabManager extends ectoCoreComponent {
         'schemaVersions': schemaVersions,
         'schemaUploads': schemaUploads,
         'schemaRecordEditor': schemaRecordEditor,
-        'schemaFieldEditor': schemaFieldEditor
+        'schemaFieldEditor': schemaFieldEditor,
+        'lookupManager': lookupManager,
+        'schemaDetail': schemaDetail
     };
 
     currentIndex = -1;
@@ -34,7 +38,7 @@ export class ectoTabManager extends ectoCoreComponent {
 
         var currentTab = this.tabs[this.currentIndex];
         if (currentTab) {
-            html += `<div class="ct-${currentTab.component.getIdCode()}"></div>`;
+            html += `<div class="tab-content ct-${currentTab.component.getIdCode()}"></div>`;
         }
 
         render('.tabs', html);

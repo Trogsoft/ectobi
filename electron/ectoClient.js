@@ -40,6 +40,8 @@ export class ectoClient {
 
     schema = {
         list: () => this.get(`api/schema`),
+        get: (schema) => this.get(`api/schema/${schema}`),
+        delete: (schema) => this.delete(`api/schema/${schema}`),
         getVersions: (schema) => this.get(`api/schema/${schema}/versions`)
     };
 
@@ -56,8 +58,18 @@ export class ectoClient {
         getLatest: (schemaTid, fieldTid) => this.get(`api/field/${schemaTid}/${fieldTid}`)
     }
 
+    lookup = {
+        list: () => this.get(`api/lookup`),
+        get: (id) => this.get(`api/lookup/${id}`),
+        create: (model) => this.postJson(`api/lookup`, model)
+    }
+
     populator = {
         list: () => this.get('api/ecto/populator')
+    }
+
+    importer = {
+        list: () => this.get('api/ecto/importer')
     }
 
 }

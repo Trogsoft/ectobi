@@ -49,12 +49,12 @@ function openDialog(arg) {
     parent: mainWindow,
     resizable: arg.resizable || false,
     webPreferences: {
-      preload: path.join(__dirname, '/preload.js'),
+      preload: path.join(__dirname, 'dialogs/dialog-preload.js'),
     },
   });
 
   win.loadURL(`file://${__dirname}/dialogs/dialog.html`).then(x=>{
-    win.webContents.send('configuration',arg);
+    win.webContents.send('dialogConfiguration',arg);
   });
 
   win.on('closed', x => {
@@ -65,9 +65,28 @@ function openDialog(arg) {
 
 app.whenReady().then(() => {
 
-  ipcMain.handle('cunt', async (ev, arg) => {
+  ipcMain.handle('openDialog', async (ev, arg) => {
     openDialog(arg);
   });
+
+  ipcMain.handle('showOpenDialog', (ev, opts) => {
+    return dialog.showOpenDialog(Object.assign(opts, {
+      title: 'Please select one or more files',
+      properties: ['openFile ', 'multiSelections ']
+    }));        
+  })
+
+  ipcMain.handle('getConfirmation', (ev, opts) =>{
+    return dialog.showMessageBox(mainWindow, {
+      type: 'question',
+      title: opts.title || 'Confirmation',
+      message: opts.message || 'Are you sure?',
+      buttons: opts.buttons ||  [
+        'Yes',
+        'No'
+      ]
+    })
+  })
 
   createWindow();
 

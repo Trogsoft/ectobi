@@ -1,7 +1,7 @@
+import { ectoComponent } from './components.js';
 import { render } from './js/reef/reef.es.js';
-import { baseComponent, coreComponent, uiComponent } from "./uiElement.js";
 
-class table extends baseComponent {
+class table extends ectoComponent {
 
     opts = {
         headers: {}
@@ -42,7 +42,7 @@ class table extends baseComponent {
         };
 
         var rows = () => {
-            if (!this.#data)
+            if (!this.#data || this.#data.length == 0)
                 return '';
             var html = '';
             this.#data.forEach((r, i) => {

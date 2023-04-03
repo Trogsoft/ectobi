@@ -3,6 +3,7 @@ using System;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Infrastructure;
 using Microsoft.EntityFrameworkCore.Metadata;
+using Microsoft.EntityFrameworkCore.Migrations;
 using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 using Trogsoft.Ectobi.Data;
 
@@ -11,9 +12,11 @@ using Trogsoft.Ectobi.Data;
 namespace Trogsoft.Ectobi.Data.Migrations
 {
     [DbContext(typeof(EctoDb))]
-    partial class EctoDbModelSnapshot : ModelSnapshot
+    [Migration("20230401111119_StagesPeriodsAndWebHooks")]
+    partial class StagesPeriodsAndWebHooks
     {
-        protected override void BuildModel(ModelBuilder modelBuilder)
+        /// <inheritdoc />
+        protected override void BuildTargetModel(ModelBuilder modelBuilder)
         {
 #pragma warning disable 612, 618
             modelBuilder
@@ -453,8 +456,8 @@ namespace Trogsoft.Ectobi.Data.Migrations
                     b.Property<string>("Description")
                         .HasColumnType("nvarchar(max)");
 
-                    b.Property<int>("Events")
-                        .HasColumnType("int");
+                    b.Property<decimal>("Events")
+                        .HasColumnType("decimal(20,0)");
 
                     b.Property<string>("Name")
                         .HasColumnType("nvarchar(max)");
@@ -480,9 +483,6 @@ namespace Trogsoft.Ectobi.Data.Migrations
                     SqlServerPropertyBuilderExtensions.UseIdentityColumn(b.Property<long>("Id"));
 
                     b.Property<int>("Attempts")
-                        .HasColumnType("int");
-
-                    b.Property<int>("EventType")
                         .HasColumnType("int");
 
                     b.Property<DateTime>("FirstAttempt")

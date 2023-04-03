@@ -7,7 +7,7 @@ export class schemaRecordEditor extends ectoTabComponent {
 
     constructor(ecto, target, data) {
         super(ecto, target, data);
-        this.idCode = data.path[0]+'-'+data.path[1]+'-recordEditor'
+        this.idCode = data.path[0] + '-' + data.path[1] + '-recordEditor'
     }
 
     getTitle = () => this.data.path[0].toUpperCase() + " Record Editor";
@@ -35,7 +35,7 @@ export class schemaUploads extends ectoTabComponent {
         });
 
     }
-    
+
     getTitle = () => this.data.path[0].toUpperCase() + " Uploads";
 
     setTarget(target) {
@@ -46,8 +46,12 @@ export class schemaUploads extends ectoTabComponent {
     uploadData = async (e) => {
 
         await window.ipc.openDialog({
-            src: 'uploadBatch',
-            schema: this.data[1]
+            dialogType: 'uploadBatchDialog',
+            schema: this.data.path[0],
+            width: 500,
+            height: 500
+        }, result => {
+            console.log(result);
         });
 
     };

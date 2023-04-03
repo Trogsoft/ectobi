@@ -1,5 +1,7 @@
 const { contextBridge, ipcRenderer } = require('electron')
 
 contextBridge.exposeInMainWorld('ipc', {
-  openDialog: (arg) => ipcRenderer.invoke('cunt', arg)
+  dialogConfiguration: (callback) => ipcRenderer.on('dialogConfiguration', callback),
+  closeMe: () => this.close(),
+  selectFile: (opts, callback) => ipcRenderer.invoke('showOpenDialog', opts, callback)
 })
