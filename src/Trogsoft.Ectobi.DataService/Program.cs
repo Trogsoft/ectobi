@@ -33,6 +33,7 @@ namespace Trogsoft.Ectobi.DataService
             builder.Services.AddTransient<ILookupService, LookupService>();
             builder.Services.AddTransient<ILookupStorage, LookupStorage>();
             builder.Services.AddTransient<IWebHookService, WebHookService>();
+            builder.Services.AddTransient<IWebHookManagementService,  WebHookManagementService>();
             builder.Services.AddTransient<IFileTranslatorService, FileTranslatorService>();
             builder.Services.AddSingleton<IBackgroundTaskCoordinator, BackgroundTaskCoordinator>();
             builder.Services.AddTransient<IEctoMapper, EctoMapper>();

@@ -1,5 +1,6 @@
 ﻿using Microsoft.AspNetCore.Mvc;
 using System.Formats.Asn1;
+using Trogsoft.Ectobi.Common.Interfaces;
 using Trogsoft.Ectobi.DataService.Services;
 
 namespace Trogsoft.Ectobi.DataService.Controllers
@@ -7,10 +8,12 @@ namespace Trogsoft.Ectobi.DataService.Controllers
     public class EctobiController : EctoApiController
     {
         private readonly ModuleManager mm;
+        private readonly IWebHookManagementService whm;
 
-        public EctobiController(ModuleManager mm)
+        public EctobiController(ModuleManager mm, IWebHookManagementService whm)
         {
             this.mm = mm;
+            this.whm = whm;
         }
 
         [Route("api/ecto/populator")]
@@ -18,6 +21,17 @@ namespace Trogsoft.Ectobi.DataService.Controllers
 
         [Route("api/ecto/importer")]
         public async Task<IActionResult> GetFileImporters() => SuccessResponse(mm.GetFileHandlers());
+
+        #region Web Hook Management
+
+        [Route("api/ecto/webhook")]
+        public async Task<IActionResult> GetWebHooks() => SuccessResponse(await whm.GetWebHooks());
+
+        [Route("api/ecto/webhook/{id}")]
+        public async Task<IActionResult> GetWebHook(long id) => SuccessResponse(await whm.GetWebHook(id));
+
+        #endregion 
+
 
     }
 }

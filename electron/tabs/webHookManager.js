@@ -1,14 +1,14 @@
-import { table } from './table.js';
-import { ectoTabComponent } from './components.js';
+import { table } from '../table.js';
+import { ectoTabComponent } from '../components.js';
 
-export class lookupManager extends ectoTabComponent {
+export class webHookManager extends ectoTabComponent {
 
     table;
     idCode;
 
     constructor(ecto, target, data) {
         super(ecto, target, data);
-        this.idCode = data.path[0] + '-lookups';
+        this.idCode = 'webhooks';
 
         this.table = new table({
             target: '.main',
@@ -16,36 +16,33 @@ export class lookupManager extends ectoTabComponent {
                 'name': {
                     label: 'Name'
                 },
-                'description': {
+                description: {
                     label: 'Description'
-                },
-                'values': {
-                     label: 'Values',
-                     format: x => x.values ? x.values.length : 0
                 }
             }
         });
 
     }
 
-    editValues = e => {
+    newResource = e => {
         window.ipc.openDialog({
-            dialogType: 'lookupValuesDialog',
-            id: this.table.getState().selectedItem.textId,
-            width: 600,
-            height: 700
+            dialogType: 'webHookEditorDialog',
+            schema: 0,
+            width: 700,
+            height: 600
         });
     }
 
-    editLookup = e => {
-
+    editResource = e => {
+        window.ipc.openDialog({
+            dialogType: 'webHookEditorDialog',
+            id: this.table.getState().selectedItem.id,
+            width: 700,
+            height: 600
+        });
     }
 
-    deleteRecord = e => {
-
-    }
-
-    newLookup = e => {
+    deleteResource = e => {
 
     }
 
@@ -54,7 +51,7 @@ export class lookupManager extends ectoTabComponent {
         document.addEventListener('ecto:tableStateChanged', this.ecto.toolbar.render);
 
         if (!soft) {
-            this.client.lookup.list().then(h => {
+            this.client.webhook.list().then(h => {
                 this.table.setData(h.result);
                 this.render();
             });
@@ -62,37 +59,28 @@ export class lookupManager extends ectoTabComponent {
 
         this.ecto.toolbar.add(this.idCode,
             {
-                editValues: {
+                newResource: {
                     type: 'button',
-                    label: 'Values',
-                    action: this.editValues,
+                    label: 'New WebHook',
+                    action: this.newResource
+                },
+                editResource: {
+                    type: 'button',
+                    label: 'Edit',
+                    action: this.editResource,
                     enable: x => this.table.getState().selectedItemCount > 0
                 },
-                div1: {
-                    type: 'divider'
-                },
-                newLookup: {
-                    type: 'button',
-                    label: 'New Lookup',
-                    action: this.newLookup
-                },
-                editLookup: {
-                    type: 'button',
-                    label: 'Edit Lookup',
-                    action: this.editLookup,
-                    enable: x => this.table.getState().selectedItemCount > 0
-                },
-                deleteLookup: {
+                deleteResource: {
                     type: 'button',
                     label: 'Delete',
-                    action: this.deleteRecord,
+                    action: this.deleteResource,
                     enable: x => this.table.getState().selectedItemCount > 0
                 }
             }
         );
     }
 
-    getTitle = () => "Lookup Tables";
+    getTitle = () => "WebHooks";
 
     getIdCode = () => this.idCode;
 

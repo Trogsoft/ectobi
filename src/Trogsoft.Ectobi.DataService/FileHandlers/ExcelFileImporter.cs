@@ -50,6 +50,44 @@ namespace Trogsoft.Ectobi.DataService.FileHandlers
 
             return new Success<List<string>>(list);
 
+        }
+
+        public Success<List<string>> GetContentsOfColumn(string columnName, string? sheetName = null)
+        {
+
+            if (xlb == null) return Success<List<string>>.Error("File is not loaded. Call LoadFile() first.", ErrorCodes.ERR_FILE_NOT_LOADED);
+            if (columnName == null) return Success<List<string>>.Error("ColumnName cannot be null.", ErrorCodes.ERR_ARGUMENT_NULL);
+
+            var ws = xlb.Worksheets.FirstOrDefault();
+            if (ws == null) return Success<List<string>>.Error("Files contains no worksheets.", ErrorCodes.ERR_FILE_PROCESSING_PROBLEM);
+
+            var columnCount = ws.ColumnsUsed().Count();
+            if (columnCount == 0) return Success<List<string>>.Error("Files contains no data.", ErrorCodes.ERR_FILE_PROCESSING_PROBLEM);
+
+            int columnIndex = -1;
+            for (var x = 1; x <= columnCount; x++)
+            {
+                var value = ws.Cell(1, x).GetValue<string>();
+                if (value == null) break;
+                if (value.Equals(columnName, StringComparison.CurrentCultureIgnoreCase))
+                {
+                    columnIndex = x;
+                    break;
+                }
+            }
+
+            List<string> result = new List<string>();
+
+            var rowCount = ws.RowsUsed().Count();
+            if (rowCount < 2) return Success<List<string>>.Error("File contains no data.", ErrorCodes.ERR_FILE_PROCESSING_PROBLEM);
+
+            for (var y = 2; y < rowCount; y++)
+            {
+                var value = ws.Cell(y, columnIndex).GetValue<string>();
+                result.Add(value);
+            }
+
+            return new Success<List<string>>(result);
 
         }
 

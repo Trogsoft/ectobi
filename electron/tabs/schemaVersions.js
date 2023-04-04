@@ -1,5 +1,5 @@
-import { ectoTabComponent } from './components.js';
-import { table } from './table.js';
+import { ectoTabComponent } from '../components.js';
+import { table } from '../table.js';
 
 export class schemaVersions extends ectoTabComponent {
 

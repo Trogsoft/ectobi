@@ -42,7 +42,8 @@ export class ectoClient {
         list: () => this.get(`api/schema`),
         get: (schema) => this.get(`api/schema/${schema}`),
         delete: (schema) => this.delete(`api/schema/${schema}`),
-        getVersions: (schema) => this.get(`api/schema/${schema}/versions`)
+        getVersions: (schema) => this.get(`api/schema/${schema}/versions`),
+        create: (model) => this.postJson(`api/schema`, model)
     };
 
     batch = {
@@ -70,6 +71,11 @@ export class ectoClient {
 
     importer = {
         list: () => this.get('api/ecto/importer')
+    }
+
+    webhook = {
+        list: () => this.get('api/ecto/webhook'),
+        get: (id) => this.get(`api/ecto/webhook/${id}`)
     }
 
 }

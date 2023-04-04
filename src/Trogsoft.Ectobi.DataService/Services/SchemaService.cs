@@ -66,10 +66,11 @@ namespace Trogsoft.Ectobi.DataService.Services
             if (model.File != null)
             {
                 var sfemResult = await fts.GetSchemaFieldEditModelCollection(model.File);
-                if (sfemResult.Succeeded)
+                if (sfemResult.Succeeded && sfemResult.Result != null)
                     model.Fields = sfemResult.Result;
                 else
                     return Success<SchemaModel>.Error(sfemResult.StatusMessage ?? "Unknown error when translating file.", ErrorCodes.ERR_FILE_PROCESSING_PROBLEM);
+
             }
 
             logger.LogInformation($"Creating schema {model.Name}.");
@@ -117,7 +118,7 @@ namespace Trogsoft.Ectobi.DataService.Services
             try
             {
                 await db.SaveChangesAsync();
-                await iwh.Dispatch(WebHookEventType.SchemaCreated, entity);
+                await iwh.Dispatch(WebHookEventType.SchemaCreated, mapper.Map<SchemaModel>(entity));
             }
             catch (Exception ex)
             {

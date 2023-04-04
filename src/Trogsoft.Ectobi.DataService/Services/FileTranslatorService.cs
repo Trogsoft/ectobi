@@ -31,6 +31,13 @@ namespace Trogsoft.Ectobi.DataService.Services
 
             var list = headers.Result.Select(header => new SchemaFieldEditModel { Name = header }).ToList();
 
+            list.ForEach(x =>
+            {
+                var contents = handler.GetContentsOfColumn(x.Name);
+                if (contents.Succeeded && contents.Result != null)
+                    x.RawValues.AddRange(contents.Result);
+            });
+
             return new Success<List<SchemaFieldEditModel>>(list);
 
         }

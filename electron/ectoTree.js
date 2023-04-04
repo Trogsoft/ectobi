@@ -31,8 +31,6 @@ export class ectoTree extends ectoCoreComponent {
             return html;
         };
 
-        html += `<li>${link('lookupManager', 'bi-table', 'Lookup Tables')}</li>`;
-
         this.schemas.forEach(s => {
             html += `<li>${link('schemaDetail/' + s.textId, 'bi-folder', s.name, true)}<ul>
                 ${link('schemaData/' + s.textId, 'bi-file-plus-fill', 'Data')}
@@ -42,6 +40,10 @@ export class ectoTree extends ectoCoreComponent {
             </ul>
             </li>`;
         });
+
+        html += `<li>${link('lookupManager', 'bi-table', 'Lookup Tables')}</li>`;
+        html += `<li>${link('webHookManager', 'bi-plug', 'WebHook Configuration')}</li>`;
+
         html += '</ul>';
         render('.tree', html);
         this.bind();

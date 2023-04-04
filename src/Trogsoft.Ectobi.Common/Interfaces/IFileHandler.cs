@@ -8,6 +8,7 @@ namespace Trogsoft.Ectobi.Common.Interfaces
 {
     public interface IFileHandler
     {
+        Success<List<string>> GetContentsOfColumn(string columnName, string? sheetName = null);
         Success<List<string>> GetHeaders(string? sheetName = null);
         Success LoadFile(BinaryFileModel model);
     }

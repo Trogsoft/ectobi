@@ -1,10 +1,11 @@
 import { render } from './js/reef/reef.es.js';
 import { ectoCoreComponent } from './components.js';
 import { schemaFieldEditor, schemaFields } from "./schemaFields.js";
-import { schemaVersions } from "./schemaVersions.js";
-import { schemaRecordEditor, schemaUploads } from './schemaUploads.js';
-import { lookupManager } from './lookupManager.js';
+import { schemaVersions } from "./tabs/schemaVersions.js";
+import { schemaRecordEditor, schemaUploads } from './tabs/schemaUploads.js';
+import { lookupManager } from './tabs/lookupManager.js';
 import { schemaDetail } from './schemaDetail.js';
+import { webHookManager } from './tabs/webHookManager.js';
 
 export class ectoTabManager extends ectoCoreComponent {
 
@@ -15,7 +16,8 @@ export class ectoTabManager extends ectoCoreComponent {
         'schemaRecordEditor': schemaRecordEditor,
         'schemaFieldEditor': schemaFieldEditor,
         'lookupManager': lookupManager,
-        'schemaDetail': schemaDetail
+        'schemaDetail': schemaDetail,
+        'webHookManager': webHookManager
     };
 
     currentIndex = -1;

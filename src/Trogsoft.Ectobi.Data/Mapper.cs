@@ -68,6 +68,8 @@ namespace Trogsoft.Ectobi.Data
             cfg.CreateMap<BatchModel, Batch>()
                 .ReverseMap();
 
+            cfg.CreateMap<WebHook, WebHookModel>().ReverseMap();
+
         });
 
         private readonly IMapper mapper;

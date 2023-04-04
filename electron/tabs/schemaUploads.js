@@ -1,5 +1,5 @@
-import { table } from './table.js';
-import { ectoTabComponent } from './components.js';
+import { table } from '../table.js';
+import { ectoTabComponent } from '../components.js';
 
 export class schemaRecordEditor extends ectoTabComponent {
 

@@ -1,5 +1,6 @@
 const { app, BrowserWindow, ipcMain, dialog } = require('electron')
 const path = require('path')
+const fs = require('fs');
 
 var mainWindow;
 
@@ -74,6 +75,17 @@ app.whenReady().then(() => {
       title: 'Please select one or more files',
       properties: ['openFile ', 'multiSelections ']
     }));        
+  })
+
+  ipcMain.handle('getFileContents', (ev, opts) => {
+    return new Promise((resolve,reject)=>{
+      fs.readFile(opts.path, (err, data) => {
+        if(err){
+          reject(err);
+        }
+        resolve(data.toString('base64'));
+      })
+    })
   })
 
   ipcMain.handle('getConfirmation', (ev, opts) =>{

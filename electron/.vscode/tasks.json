@@ -4,7 +4,7 @@
         {
             "label": "Watch Sass",
             "type": "shell",
-            "command": "sass --watch ./ectobi.scss ./ectobi.css --style=compressed",
+            "command": "sass --watch ./css/ectobi.scss ./css/ectobi.css --style=compressed",
             "problemMatcher": [],
             "group": {
                 "kind": "build",

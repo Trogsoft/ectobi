@@ -439,9 +439,18 @@ $col in $btn-styles {
         }
     }
 }
+ 
+table.table {
+    width: 100%;
+    border-collapse: collapse;
+
+    th {
+        text-align: left;
+    }
+}
 
 @for $i from 1 through 5 {
-    
+
     .p-#{$i} {
         padding: $pad * $i;
     }
