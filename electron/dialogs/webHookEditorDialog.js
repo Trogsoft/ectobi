@@ -67,9 +67,9 @@ export class webHookEditorDialog extends dialogBase {
                 <thead>
                     <tr>
                         <th></th>
-                        <th style="width: 15%;">Create</th>
-                        <th style="width: 15%;">Edit</th>
-                        <th style="width: 15%;">Delete</th>
+                        <th class="w-15pc">Create</th>
+                        <th class="w-15pc">Edit</th>
+                        <th class="w-15pc">Delete</th>
                     </tr>
                 </thead>
                 <tbody>

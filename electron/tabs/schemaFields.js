@@ -1,7 +1,7 @@
-import { ectoTabComponent } from './components.js';
-import { table } from "./table.js";
-import { fieldType, fieldFlags } from "./enums.js";
-import { render } from './js/reef/reef.es.js';
+import { ectoTabComponent } from '../components.js';
+import { table } from "../table.js";
+import { fieldType, fieldFlags } from "../enums.js";
+import { render } from '../js/reef/reef.es.js';
 
 export class schemaFieldEditor extends ectoTabComponent {
 
@@ -134,9 +134,23 @@ export class schemaFields extends ectoTabComponent {
         this.table.setTarget(target);
     }
 
+    newField = e => {
+        this.openDialog('fieldEditorDialog', {
+            height: 700,
+            width: 700,
+            schema: this.data.path[0],
+            field: null
+        });
+    }
+
     editField = e => {
         var item = this.table.getState().selectedItem;
-        this.ecto.tabManager.openNewTab(`schemaFieldEditor/${this.data.path[0]}/${item.textId}`);
+        this.openDialog('fieldEditorDialog', {
+            height: 700,
+            width: 700,
+            schema: this.data.path[0],
+            field: item.textId
+        });
     }
 
     init(soft = false) {

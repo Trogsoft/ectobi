@@ -63,7 +63,7 @@ export class uploadBatchDialog extends dialogBase {
                 <div class="form-field form-field-oneline">
                     <label>Selected Files</label>
                     <ul class="form-field-list">
-                        ${this.selectedFiles.map((x, i) => '<li><div class="flex-grow-4 me-1">' + x + '</div><a href="#" class="flex-grow-1 remove-from-list" data-index="' + i + '"><i class="bi bi-trash"></i></a></li>').join('\r\n')}
+                        ${this.selectedFiles.map((x, i) => '<li><div class="flex-grow-4 me-1">' + x + '</div><a href="#" class="flex-grow-1 remove-from-list" data-index="' + i + '" title="Remove File"><i class="ri-delete-bin-fill"></i></a></li>').join('\r\n')}
                     </ul>
                 </div>
             `;

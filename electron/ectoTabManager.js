@@ -1,6 +1,6 @@
 import { render } from './js/reef/reef.es.js';
 import { ectoCoreComponent } from './components.js';
-import { schemaFieldEditor, schemaFields } from "./schemaFields.js";
+import { schemaFieldEditor, schemaFields } from "./tabs/schemaFields.js";
 import { schemaVersions } from "./tabs/schemaVersions.js";
 import { schemaRecordEditor, schemaUploads } from './tabs/schemaUploads.js';
 import { lookupManager } from './tabs/lookupManager.js';
@@ -33,7 +33,7 @@ export class ectoTabManager extends ectoCoreComponent {
         this.tabs.forEach((tab, i) => {
             html += `<div href="#" class="tab ${this.currentIndex == i ? 'active' : ''}" data-tab-id="${i}">
                 <span class="tab-title">${tab.component.getTitle()}</span>
-                <a href="#" class="close-tab" data-tab-id="${i}"><i class="bi bi-x-lg"></i></a>
+                <a href="#" class="close-tab" data-tab-id="${i}"><i class="ri-close-circle-fill"></i></a>
             </div>`;
         });
         html += '</div>';

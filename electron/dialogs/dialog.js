@@ -1,3 +1,4 @@
+import { fieldEditorDialog } from "./fieldEditorDialog.js";
 import { lookupValuesDialog } from "./lookupValuesDialog.js";
 import { newSchemaDialog } from "./newSchemaDialog.js";
 import { uploadBatchDialog } from "./uploadBatchDialog.js";
@@ -7,7 +8,8 @@ export const dialogs = {
     'uploadBatchDialog': uploadBatchDialog,
     'lookupValuesDialog': lookupValuesDialog,
     'newSchemaDialog': newSchemaDialog,
-    'webHookEditorDialog': webHookEditorDialog
+    'webHookEditorDialog': webHookEditorDialog,
+    'fieldEditorDialog': fieldEditorDialog
 }
 
 window.addEventListener('DOMContentLoaded', x => {

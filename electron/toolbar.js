@@ -32,9 +32,9 @@ export class ectoToolbar extends ectoCoreComponent {
     render = () => {
 
         var html = `
-            <button class="tb-btn" title="Connect to..."><i class="bi bi-server"></i></button>
+            <button class="tb-btn" title="Connect to..."><i class="ri-server-fill ri-lg"></i></button>
             <div class="tb-divider"></div>
-            <button title="Create a new blank schema" class="tb-btn new-schema"><i class="bi bi-table"></i> New Schema...</button>
+            <button title="Create a new blank schema" class="tb-btn new-schema"><i class="ri-database-2-fill ri-lg"></i> New Schema...</button>
         `;
 
         var renderControl = (id, c) => {

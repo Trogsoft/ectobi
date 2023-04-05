@@ -1,0 +1,30 @@
+{
+    "version": "2.0.0",
+    "tasks": [
+        {
+            "label": "Run Vue",
+            "type": "shell",
+            "command": "npm run dev",
+            "problemMatcher": [],
+            "options": {
+                "cwd": "${workspaceFolder}/ectobi-vue"
+            },   
+            "runOptions": {
+                "runOn": "folderOpen"
+            }
+        },
+        {
+            "label": "Watch Sass",
+            "type": "shell",
+            "command": "sass --watch ./ectobi-vue/css/app.scss ./ectobi-vue/css/app.css --style=compressed",
+            "problemMatcher": [],
+            "group": {
+                "kind": "build",
+                "isDefault": true
+            },
+            "runOptions": {
+                "runOn": "folderOpen"
+            }
+        }
+    ]
+}
