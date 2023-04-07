@@ -5,13 +5,23 @@ const fieldFlags = {
     8: 'Required At Import'
 };
 const fieldType = {
-    1: 'Text',
-    2: 'Integer',
-    3: 'Decimal',
-    4: 'Yes/No',
-    5: 'Set',
-    6: 'Script',
-    7: 'Populator'
+    Text: 1,
+    Integer: 2,
+    Decimal: 3,
+    YesNo: 4,
+    LookupSet: 5,
+    Script: 6,
+    Populator: 7,
+    DateTime: 8,
+
+    getName(value) {
+        var name = 'Unknown';
+        Object.keys(this).forEach(x => {
+            if (this[x] == value)
+                name = x.toString();
+        });
+        return name;
+    }
 };
 const webHookEventType = {
     1: { textId: 'SchemaCreated', name: 'Schema Created' },
@@ -32,5 +42,14 @@ const webHookEventType = {
     32768: { textId: 'RecordCreated', name: 'Record Created' },
     65535: { textId: 'RecordUpdated', name: 'Record Updated' },
     131072: { textId: 'RecordDeleted', name: 'Record Deleted' },
+
+    getNumericValue(textId) {
+        Object.keys(this).forEach(key => {
+            if (this[key] == textId) {
+                return parseInt(key);
+            }
+        })
+    }
 }
+
 export { fieldFlags, fieldType, webHookEventType }

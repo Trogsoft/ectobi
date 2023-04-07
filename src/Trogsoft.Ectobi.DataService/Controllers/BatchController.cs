@@ -25,5 +25,9 @@ namespace Trogsoft.Ectobi.DataService.Controllers
         public async Task<IActionResult> GetBatchList(string schemaTid)
             => SuccessResponse(await batches.GetBatches(schemaTid));
 
+        [HttpDelete("{id}")]
+        public async Task<IActionResult> DeleteBatch(long id)
+            => SuccessResponse(await batches.DeleteBatch(id));
+
     }
 }

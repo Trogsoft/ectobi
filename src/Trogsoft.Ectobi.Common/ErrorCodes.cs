@@ -19,5 +19,6 @@ namespace Trogsoft.Ectobi.Common
         public static readonly int ERR_LOAD_FILE_FAILED = 0x0009;
         public static readonly int ERR_FILE_PROCESSING_PROBLEM = 0x000a;
         public static readonly int ERR_FILE_NOT_LOADED = 0x000b;
+        public static readonly int LOOKUP_SET_CREATION_FAILED = 0x000c;
     }
 }

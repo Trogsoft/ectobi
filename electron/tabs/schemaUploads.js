@@ -22,6 +22,7 @@ export class schemaUploads extends ectoTabComponent {
     idCode;
 
     constructor(ecto, target, data) {
+
         super(ecto, target, data);
         this.idCode = data.path[0] + '-uploads';
 
@@ -30,9 +31,14 @@ export class schemaUploads extends ectoTabComponent {
             headers: {
                 'name': {
                     label: 'Name'
+                },
+                created: {
+                    label: 'Created'
                 }
             }
         });
+
+        document.addEventListener('ecto:tableStateChanged', this.ecto.toolbar.render);
 
     }
 
@@ -66,9 +72,22 @@ export class schemaUploads extends ectoTabComponent {
 
     getIdCode = () => this.idCode;
 
-    init(soft = false) {
+    deleteBatch = e => {
+        window.ipc.confirm({
+            message: 'Are you sure you want to delete this batch?'
+        }).then(x=>{
+            if (x.response == 1) return;
 
-        document.addEventListener('ecto:tableStateChanged', this.ecto.toolbar.render);
+            var id = this.table.getState().selectedItem.id;
+            this.ecto.client.batch.delete(id).then(x=>{
+                this.init(false);
+            }).catch(err=>{
+                window.ipc.alert({ message: err.message });
+            })
+        })
+    }
+
+    init(soft = false) {
 
         if (!soft) {
             this.client.batch.list(this.data.path[0]).then(h => {
@@ -81,12 +100,12 @@ export class schemaUploads extends ectoTabComponent {
             {
                 uploadData: {
                     type: 'button',
-                    label: 'Upload Data',
+                    label: 'Upload Batch',
                     action: this.uploadData
                 },
                 newBatch: {
                     type: 'button',
-                    label: 'New Batch',
+                    label: 'New Empty Batch',
                     action: this.newBatch
                 },
                 addRecord: {
@@ -94,6 +113,12 @@ export class schemaUploads extends ectoTabComponent {
                     label: 'Add Records',
                     action: this.addRecord,
                     enable: x => this.table.getState().selectedItemCount > 0
+                },
+                deleteBatch: {
+                    type: 'button',
+                    label: 'Delete',
+                    enable: x => this.table.getState().selectedItemCount > 0,
+                    action: this.deleteBatch
                 }
             }
         );

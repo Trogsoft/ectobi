@@ -20,11 +20,17 @@ export class ectoToolbar extends ectoCoreComponent {
     }
 
     handleControlClick = e => {
-        var id = e.currentTarget.getAttribute('data-control-id');
-        Object.keys(this.controls).forEach(g => {
-            Object.keys(this.controls[g]).forEach(c => {
-                if (c == id)
-                    this.controls[g][c].action();
+        var controlId = e.currentTarget.getAttribute('data-control-id');
+        Object.keys(this.controls).forEach(group => {
+            Object.keys(this.controls[group]).forEach(control => {
+                if (control == controlId) {
+                    if (this.controls[group][control].action) {
+                        this.controls[group][control].action();
+                    } else {
+                        throw new Error('No action is configured for this control.');
+                    }
+                    return;
+                }
             });
         });
     };
@@ -40,7 +46,7 @@ export class ectoToolbar extends ectoCoreComponent {
         var renderControl = (id, c) => {
             var enabled = c.enable ? c.enable() : true;
             if (c.type == 'button' || !c.type) {
-                return `<button data-control-id="${id}" class="btn ${enabled ? '' : 'disabled'}">${c.label || 'Button'}</button>`;
+                return `<button data-control-id="${id}" class="btn" ${enabled ? '' : 'disabled'}>${c.label || 'Button'}</button>`;
             }
 
             if (c.type == 'divider') {
@@ -48,7 +54,7 @@ export class ectoToolbar extends ectoCoreComponent {
             }
 
             if (c.type == 'select') {
-                var html = `<select data-control-id="${id}" class="tb-select ${enabled ? '' : 'disabled'}">`;
+                var html = `<select data-control-id="${id}" class="tb-select" ${enabled ? '' : 'disabled'}>`;
                 if (c.options) {
                     c.options.forEach(opt => {
                         html += `<option value="${opt.textId}">${opt.name}</option>`;

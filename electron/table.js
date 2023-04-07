@@ -1,6 +1,8 @@
 import { ectoComponent } from './components.js';
 import { render } from './js/reef/reef.es.js';
 
+const KEY_UP = 38;
+const KEY_DOWN = 40;
 class table extends ectoComponent {
 
     opts = {
@@ -12,7 +14,8 @@ class table extends ectoComponent {
         rowCount: 0,
         selectedItemCount: 0,
         selectedItemIndex: -1,
-        selectedItem: null
+        selectedItem: null,
+        selectedItems: []
     };
 
     constructor(opts) {

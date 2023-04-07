@@ -10,6 +10,7 @@ namespace Trogsoft.Ectobi.Common.Interfaces
     {
         Success<List<string>> GetContentsOfColumn(string columnName, string? sheetName = null);
         Success<List<string>> GetHeaders(string? sheetName = null);
+        Success<ValueMap> GetValueMap();
         Success LoadFile(BinaryFileModel model);
     }
 }

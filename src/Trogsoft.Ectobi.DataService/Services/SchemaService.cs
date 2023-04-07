@@ -87,17 +87,6 @@ namespace Trogsoft.Ectobi.DataService.Services
             var entity = mapper.Map<Schema>(model);
             entity.TextId = db.GetTextId<Schema>(model.Name);
 
-            // If any of the fields are of the type Set, create the supporting schema that contains the values of the set.
-            foreach (var field in entity.SchemaFields.Where(x => x.Type == SchemaFieldType.Set))
-            {
-                LookupSetModel lsm = new LookupSetModel
-                {
-                    Name = field.Name,
-                    Description = $"Auto-created lookup set to support the schema {model.Name}"
-                };
-                await lookup.CreateLookupSet(lsm);
-            }
-
             // Make  the first version
             var firstVersion = mapper.Map<SchemaVersion>(entity);
             firstVersion.Version = 1;
@@ -105,7 +94,21 @@ namespace Trogsoft.Ectobi.DataService.Services
 
             foreach (var field in entity.SchemaFields)
             {
+
                 var versionField = mapper.Map<SchemaFieldVersion>(field);
+
+                if (field.Type == SchemaFieldType.Set)
+                {
+                    LookupSetModel lsm = new LookupSetModel
+                    {
+                        Name = field.Name,
+                        Description = $"Auto-created lookup set to support the schema {model.Name}"
+                    };
+                    var lu = await lookup.CreateLookupSet(lsm);
+                    if (!lu.Succeeded) return Success<SchemaModel>.Error("Lookup set could not be created: "+lu.StatusMessage, ErrorCodes.LOOKUP_SET_CREATION_FAILED);
+                    versionField.LookupSet = db.LookupSets.SingleOrDefault(x => x.TextId == lu.Result.TextId);
+                }
+
                 versionField.SchemaField = field;
                 firstVersion.Fields.Add(versionField);
             }

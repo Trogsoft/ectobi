@@ -5,7 +5,7 @@ import { dialogBase } from "./dialogBase.js";
 
 export class webHookEditorDialog extends dialogBase {
 
-    client = new ectoClient();
+    client = ectoClient;
 
     model = {
         id: 0,

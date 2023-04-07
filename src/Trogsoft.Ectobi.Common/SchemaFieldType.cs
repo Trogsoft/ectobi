@@ -8,6 +8,7 @@
         Boolean = 4,
         Set = 5,
         Script = 6, 
-        Populator = 7
+        Populator = 7,
+        DateTime = 8
     }
 }

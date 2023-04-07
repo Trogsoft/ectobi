@@ -49,10 +49,17 @@ namespace Trogsoft.Ectobi.Data
                 .ForMember(x => x.Id, y => y.MapFrom(z => 0))
                 .ReverseMap();
 
+            cfg.CreateMap<SchemaFieldVersion, SchemaFieldModel>()
+                .ForMember(x => x.Populator, y => y.MapFrom(z => z.Populator != null ? z.Populator.TextId : null))
+                .ForMember(x => x.LookupTid, y => y.MapFrom(z => z.LookupSet != null ? z.LookupSet.TextId : null))
+                .ReverseMap();
+
             cfg.CreateMap<SchemaField, SchemaFieldEditModel>()
                 .ReverseMap();
 
             cfg.CreateMap<SchemaFieldVersion, SchemaFieldEditModel>()
+                .ForMember(x => x.Populator, y => y.MapFrom(z => z.Populator != null ? z.Populator.TextId : null))
+                .ForMember(x => x.LookupTid, y => y.MapFrom(z => z.LookupSet != null ? z.LookupSet.TextId : null))
                 .ReverseMap();
 
             cfg.CreateMap<SchemaFieldVersion, SchemaFieldVersion>()

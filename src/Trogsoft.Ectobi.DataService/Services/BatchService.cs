@@ -15,8 +15,11 @@ namespace Trogsoft.Ectobi.DataService.Services
         private readonly IBackgroundTaskCoordinator bg;
         private readonly ModuleManager mm;
         private readonly IWebHookService iwh;
+        private readonly ITemporaryStore temp;
+        private readonly IFileTranslatorService fts;
 
-        public BatchService(ILogger<BatchService> logger, EctoDb db, IEctoMapper mapper, IBackgroundTaskCoordinator bg, ModuleManager mm, IWebHookService iwh)
+        public BatchService(ILogger<BatchService> logger, EctoDb db, IEctoMapper mapper, IBackgroundTaskCoordinator bg, ModuleManager mm, IWebHookService iwh,
+            ITemporaryStore temp, IFileTranslatorService fts)
         {
             this.logger = logger;
             this.db = db;
@@ -24,6 +27,8 @@ namespace Trogsoft.Ectobi.DataService.Services
             this.bg = bg;
             this.mm = mm;
             this.iwh = iwh;
+            this.temp = temp;
+            this.fts = fts;
         }
 
         public async Task<Success<BatchModel>> CreateEmptyBatch(BatchModel model)
@@ -55,8 +60,10 @@ namespace Trogsoft.Ectobi.DataService.Services
             var schema = db.Schemas.SingleOrDefault(x => x.TextId == model.SchemaTid);
             if (schema == null) return Success<BackgroundTaskInfo>.Error("Schema not found.", ErrorCodes.ERR_NOT_FOUND);
 
+            var temporaryFileId = temp.StoreObject(model); 
+
             BackgroundTaskInfo job = new BackgroundTaskInfo();
-            bg.Enqueue<IBatchService>(x => x.BackgroundImportBatch(job, model));            
+            bg.Enqueue<IBatchService>(x => x.BackgroundImportBatch(job, temporaryFileId));            
             return new Success<BackgroundTaskInfo>(job);
         }
 
@@ -76,8 +83,11 @@ namespace Trogsoft.Ectobi.DataService.Services
 
         }
 
-        public Success BackgroundImportBatch(BackgroundTaskInfo job, ImportBatchModel model)
+        public Success BackgroundImportBatch(BackgroundTaskInfo job, string temporaryFile)
         {
+
+            if (temporaryFile == null) return Success.Error("TemporaryFile cannot be null.", ErrorCodes.ERR_ARGUMENT_NULL);
+            var model = temp.GetStoredObject<ImportBatchModel>(temporaryFile);
 
             if (model == null) return Success.Error("Model cannot be null", ErrorCodes.ERR_ARGUMENT_NULL);
 
@@ -110,6 +120,15 @@ namespace Trogsoft.Ectobi.DataService.Services
             {
                 validationResults.Where(x => x.Failed).ToList().ForEach(x => logger.LogError(x.Message));
                 return new Success(false);
+            }
+
+            if (model.BinaryFile != null)
+            {
+                var vm = fts.GetValueMap(model.BinaryFile).Result;
+                if (!vm.Succeeded || vm.Result == null)
+                    return vm;
+
+                model.ValueMap = vm.Result;
             }
 
             var transaction = db.Database.BeginTransaction();
@@ -155,6 +174,7 @@ namespace Trogsoft.Ectobi.DataService.Services
 
             transaction.Commit();
 
+            temp.Remove(temporaryFile);
             bg.Enqueue<IBatchService>(x => x.ExecutePopulators(batch.Id));
 
             return new Success(true);
@@ -245,6 +265,25 @@ namespace Trogsoft.Ectobi.DataService.Services
             }
 
             return results;
+
+        }
+
+        public async Task<Success> DeleteBatch(long batchId)
+        {
+
+            var batch = await db.Batches.SingleOrDefaultAsync(x => x.Id == batchId);
+            if (batch == null)
+                return Success.Error("Batch not found.", ErrorCodes.ERR_NOT_FOUND);
+
+            db.Batches.Remove(batch);
+
+            await db.SaveChangesAsync();
+            await iwh.Dispatch(WebHookEventType.BatchDeleted, new
+            {
+                BatchId = batch.Id
+            });
+
+            return new Success(true);
 
         }
     }

@@ -6,7 +6,9 @@ export class uploadBatchDialog extends dialogBase {
 
     selectedFiles = [];
     importers = [];
-    client = new ectoClient();
+    client = ectoClient;
+    uploadTasks = [];
+    completedTasks = 0;
 
     constructor(sender, arg) {
         super(sender, arg);
@@ -45,10 +47,55 @@ export class uploadBatchDialog extends dialogBase {
         selectFile.removeEventListener('click', this.selectFiles);
         selectFile.addEventListener('click', this.selectFiles);
 
+        root.querySelectorAll('.upload-files').forEach(x=>{
+            x.removeEventListener('click', this.upload);
+            x.addEventListener('click', this.upload);
+        })
+
         root.querySelectorAll('.remove-from-list').forEach(x => {
             x.removeEventListener('click', this.removeItem);
             x.addEventListener('click', this.removeItem);
         });
+    }
+
+    getFileName = (file) => {
+        var slash = file.indexOf('/') > -1 ? '/' : '\\';
+        var parts = file.split(slash);
+        return parts[parts.length - 1];
+    }
+
+    upload = (e) => {
+
+        this.selectedFiles.forEach(file=>{
+
+            window.ipc.getFileContents({ path: file }).then(fc => {
+
+                var model = {
+                    schemaTid: this.args.schema,
+                    batchName: this.getFileName(file),
+                    batchSource: file,
+                    binaryFile: {
+                        filename: this.getFileName(file),
+                        data: fc
+                    }
+                }
+                var task = this.client.batch.upload(model);
+                task.then(x=>{
+                    this.completedTasks++;
+                    if (this.completedTasks == this.uploadTasks.length)
+                        window.ipc.closeMe();
+                    else 
+                        this.render();
+                })
+                this.uploadTasks.push(task);
+                this.render();
+
+            }).catch(err => {
+                window.ipc.alert({ message: err.message });
+            });
+
+        });
+
     }
 
     render() {
@@ -72,9 +119,20 @@ export class uploadBatchDialog extends dialogBase {
         html += `<div class="form-field form-field-oneline">
                 <label>Target schema</label>
                 <p class="form-field-text">${this.args.schema}</p>
-            </div>
+            </div>`;
 
-            <div class="dlg-button-row">
+        if (this.uploadTasks.length > 0) {
+            var pc = ((this.completedTasks / this.uploadTasks.length * 100) / 5) * 5;
+
+            html += `<div class="progress">
+                <div class="progress-bar w-${pc}pc">
+                    <span class="progress-label">${pc}%</span>
+                </div>
+            </div>`;
+
+        }
+
+        html += `<div class="dlg-button-row">
                 <button class="btn btn-danger close-dialog">Cancel</button>
                 <button class="btn btn-success upload-files ${this.selectedFiles.length > 0 ? '' : 'disabled'}">Upload</button>
             </div>

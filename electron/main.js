@@ -88,6 +88,10 @@ app.whenReady().then(() => {
     })
   })
 
+  ipcMain.handle('alert', (ev, opts)=>{
+    return dialog.showMessageBox(ev.sender, opts);
+  });
+
   ipcMain.handle('getConfirmation', (ev, opts) =>{
     return dialog.showMessageBox(mainWindow, {
       type: 'question',

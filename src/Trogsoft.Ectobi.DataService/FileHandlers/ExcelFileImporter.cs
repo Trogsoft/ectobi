@@ -91,5 +91,35 @@ namespace Trogsoft.Ectobi.DataService.FileHandlers
 
         }
 
+        public Success<ValueMap> GetValueMap()
+        {
+
+            if (xlb == null) return Success<ValueMap>.Error("File is not loaded. Call LoadFile() first.", ErrorCodes.ERR_FILE_NOT_LOADED);
+
+            var ws = xlb.Worksheets.FirstOrDefault();
+            if (ws == null)
+                return Success<ValueMap>.Error("File contains no worksheets.", ErrorCodes.ERR_FILE_PROCESSING_PROBLEM);
+
+            var vm = new ValueMap();
+
+            for (var x = 1; x <= ws.ColumnsUsed().Count(); x++)
+            {
+                var header = ws.Cell(1, x).GetValue<string>();
+                vm.Headings.Add(header);
+            }
+
+            for (var y = 2; y <= ws.RowsUsed().Count(); y++)
+            {
+                var row = new ValueMapRow();
+                for (var x = 1; x <= ws.ColumnsUsed().Count(); x++)
+                {
+                    row.Add(ws.Cell(y, x).GetValue<string?>()!);
+                }
+                vm.Rows.Add(row);
+            }
+
+            return new Success<ValueMap>(vm);
+
+        }
     }
 }

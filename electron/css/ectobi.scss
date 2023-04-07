@@ -34,6 +34,7 @@ body {
     font-family: 'Poppins';
     font-size: 14px;
     margin: 0;
+    padding: 0;
     height: 100%;
     color: $text;
     max-width: 100%;
@@ -65,7 +66,8 @@ body.dialog {
 $btn-styles: "danger"$danger,
     "success"$success;
 
-@each $style, $col in $btn-styles {
+@each $style,
+$col in $btn-styles {
     .btn-#{$style} {
         background-color: $col;
         background: linear-gradient($col, darken($col, 7%));
@@ -84,7 +86,7 @@ $btn-styles: "danger"$danger,
     display: flex;
     align-items: center;
     justify-content: space-between;
-    padding: math.div($pad,2) $pad;
+    padding: math.div($pad, 2) $pad;
 
     h1 {
         margin: 0;
@@ -123,13 +125,15 @@ $btn-styles: "danger"$danger,
     display: flex;
     flex-direction: column;
     height: 100%;
+    margin: 0;
 
     .toolbar {
         background-color: $toolbar;
         background: linear-gradient($toolbar, darken($toolbar, 7%));
-        height: 30px;
+        min-height: 55px - ($pad * 2);
         padding: $pad;
         display: flex;
+        flex: 0;
 
         .bi {
             font-size: 16px;
@@ -146,7 +150,7 @@ $btn-styles: "danger"$danger,
             transition: background-color 250ms, color 250ms, background 250ms;
         }
 
-        button:not(.disabled):hover {
+        button:not(:disabled):hover {
             color: $text;
             background-color: $highlight;
             background: linear-gradient($highlight, darken($highlight, 7%));
@@ -176,11 +180,11 @@ $btn-styles: "danger"$danger,
             }
 
             button:first-of-type {
-                border-radius: math.div($pad,2) 0 0 math.div($pad,2);
+                border-radius: math.div($pad, 2) 0 0 math.div($pad, 2);
             }
 
             button:last-of-type {
-                border-radius: 0 math.div($pad,2) math.div($pad,2) 0;
+                border-radius: 0 math.div($pad, 2) math.div($pad, 2) 0;
             }
         }
 
@@ -190,29 +194,68 @@ $btn-styles: "danger"$danger,
         width: 100%;
         display: flex;
         height: calc(100% - 60px - 30px);
+        flex-grow: 1;
 
-        .tree {
+        .tree-container {
             width: 300px;
             border: 1px solid $tb-dark;
             min-width: 300px;
+            display: flex;
+            flex-direction: column;
+            justify-content: space-between;
 
-            ul {
-                padding: 0;
-                margin: 0;
-                padding-left: math.div($pad, 2);
-                list-style-type: none;
+            .tree {
+                overflow: auto;
 
-                li {
-                    padding: math.div($pad, 3);
+                ul {
+                    padding: 0;
+                    margin: 0;
+                    padding-left: math.div($pad, 2);
+                    list-style-type: none;
 
-                    a {
-                        text-decoration: none;
-                        color: #000000;
+                    li {
+                        padding: math.div($pad, 3);
+
+                        a {
+                            text-decoration: none;
+                            color: #000000;
+                        }
+
+                        ul {
+                            margin-left: $pad;
+                        }
                     }
+                }
 
-                    ul {
+            }
+
+            .roots {
+                border-top: 1px solid $tb-dark;
+                min-height: 40px;
+
+                .root {
+                    transition: background 250ms, background-color 250ms;
+                    background-color: $toolbar;    
+                    background: linear-gradient($toolbar, darken($toolbar, 7%));           
+                    text-decoration: none;
+                    color: black;
+                    padding: $pad * 1.2;
+                    display: flex;
+                    .icon {
+                        margin-right: $pad;
+                    }
+                    .badge {
                         margin-left: $pad;
+                        padding: 0 math.div($pad, 1.5);
+                        border-radius: $pad;
+                        background-color: red;
+                        color: white;
                     }
+                }
+
+                .root:hover {
+                    background-color: lighten($toolbar, 20%);    
+                    background: linear-gradient(lighten($toolbar, 20%), darken($toolbar, 13%));                               
                 }
             }
 
@@ -229,7 +272,9 @@ $btn-styles: "danger"$danger,
 
     .status {
         background-color: $toolbar;
-        height: 30px;
+        min-height: 40px - $pad;
+        max-height: 40px - $pad;
+        padding: math.div($pad, 2); 
     }
 
 }
@@ -261,7 +306,7 @@ $btn-styles: "danger"$danger,
     }
 }
 
-.btn.disabled {
+.btn:disabled {
     background-color: $tb-control-disabled !important;
     background: linear-gradient($tb-control-disabled, darken($tb-control-disabled, 7%)) !important;
     color: lighten($tb-control-disabled, 20%) !important;
@@ -395,7 +440,7 @@ $btn-styles: "danger"$danger,
         .tbl {
             border-top: 0;
             border-bottom: 1px solid $tb-dark;
-            
+
             thead {
                 position: sticky;
                 top: 0;
@@ -407,6 +452,19 @@ $btn-styles: "danger"$danger,
 
 #content {
     padding: $pad * 1.5;
+}
+
+.progress {
+    border: 1px solid $tb-dark;
+    border-radius: math.div($pad, 3);
+    .progress-bar {
+        background-color: $success;
+        background: linear-gradient($success, darken($success, 7%));
+        white-space: nowrap;
+        .progress-label {
+            overflow: hidden;
+        }
+    }
 }
 
 .form-field {
@@ -472,7 +530,7 @@ $btn-styles: "danger"$danger,
         list-style-type: none;
         margin: 0;
         padding: 0;
-        max-height: 45vh;
+        max-height: 40vh;
 
         li {
             margin: 0;
@@ -485,7 +543,7 @@ $btn-styles: "danger"$danger,
         }
     }
 }
- 
+
 table.table {
     width: 100%;
     border-collapse: collapse;
@@ -496,7 +554,8 @@ table.table {
 }
 
 $i: 0.05;
-@while $i <= 1 {
+
+@while $i <=1 {
 
     .w-#{$i * 100}pc {
         width: percentage($i);

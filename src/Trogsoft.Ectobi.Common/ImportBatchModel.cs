@@ -13,5 +13,7 @@ namespace Trogsoft.Ectobi.Common
         public string? BatchSource { get; set; }
 
         public ValueMap ValueMap { get; set; } = new();
+
+        public BinaryFileModel? BinaryFile { get; set; }
     }
 }

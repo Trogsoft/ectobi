@@ -33,13 +33,21 @@ namespace Trogsoft.Ectobi.DataService
             builder.Services.AddTransient<ILookupService, LookupService>();
             builder.Services.AddTransient<ILookupStorage, LookupStorage>();
             builder.Services.AddTransient<IWebHookService, WebHookService>();
-            builder.Services.AddTransient<IWebHookManagementService,  WebHookManagementService>();
+            builder.Services.AddTransient<IWebHookManagementService, WebHookManagementService>();
             builder.Services.AddTransient<IFileTranslatorService, FileTranslatorService>();
             builder.Services.AddSingleton<IBackgroundTaskCoordinator, BackgroundTaskCoordinator>();
             builder.Services.AddTransient<IEctoMapper, EctoMapper>();
             builder.Services.AddControllers();
 
             builder.Services.AddSignalR();
+
+            var temporaryStoreProvider = builder.Configuration.GetSection("Ectobi")?.GetValue<string?>("TemporaryStoreProvider");
+            if (temporaryStoreProvider == null) temporaryStoreProvider = "SystemTempStore";
+
+            var type = GetLoadedType(temporaryStoreProvider);
+            if (type == null) throw new Exception("Temporary store provider could not be found or could not be instantiated.");
+
+            builder.Services.AddTransient(typeof(ITemporaryStore), type);
 
             var populators = DiscoverModules<IPopulator>(builder.Services);
             var fileHandlers = DiscoverModules<IFileHandler>(builder.Services);
@@ -91,11 +99,25 @@ namespace Trogsoft.Ectobi.DataService
             app.Run();
         }
 
+        private static Type? GetLoadedType(string typeName)
+        {
+            foreach (var type in AppDomain.CurrentDomain.GetAssemblies()
+                .SelectMany(x => x.GetTypes().Where(y => 
+                    y.Name.Equals(typeName, StringComparison.CurrentCultureIgnoreCase) && 
+                    y.IsPublic && 
+                    !y.IsAbstract && 
+                    !y.IsInterface)))
+            {
+                return type;
+            }
+            return null;
+        }
+
         private static List<Type> DiscoverModules<T>(IServiceCollection services)
         {
 
             List<Type> modules = new List<Type>();
-            foreach (var type in AppDomain.CurrentDomain.GetAssemblies().SelectMany(x=>x.GetTypes().Where(y=>typeof(T).IsAssignableFrom(y) && y.IsPublic && !y.IsAbstract && !y.IsInterface)))
+            foreach (var type in AppDomain.CurrentDomain.GetAssemblies().SelectMany(x => x.GetTypes().Where(y => typeof(T).IsAssignableFrom(y) && y.IsPublic && !y.IsAbstract && !y.IsInterface)))
             {
                 services.AddTransient(type);
                 modules.Add(type);

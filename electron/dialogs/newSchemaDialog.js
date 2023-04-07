@@ -5,7 +5,7 @@ import { dialogBase } from "./dialogBase.js";
 export class newSchemaDialog extends dialogBase {
 
     values;
-    client = new ectoClient();
+    client = ectoClient;
 
     fileContent;
 
@@ -65,7 +65,26 @@ export class newSchemaDialog extends dialogBase {
                 data: this.fileContent
             };
             this.client.schema.create(model).then(x => {
-                window.ipc.closeMe();
+
+                var upload = document.querySelector('#schema-upload-data');
+                if (upload && upload.checked) {
+                    var batchModel = {
+                        schemaTid: x.result.textId,
+                        batchName: model.file.filename,
+                        batchSource: this.model.file,
+                        binaryFile: model.file
+                    };
+                    this.client.batch.upload(batchModel).then(x=>{
+                        window.ipc.closeMe();
+                    }).catch(x=>{
+                        window.ipc.alert({ message: x.statusMessage });
+                    })
+                } 
+
+            }).catch(x=>{
+
+                window.ipc.alert({ message: x.statusMessage });
+
             });
         }
 
@@ -128,13 +147,17 @@ export class newSchemaDialog extends dialogBase {
                 <label for="new-schema-file">Create a schema from a file</label>
             </div>
             <div class="form-field ps-3 mt-1">
-                <button class="btn select-file ${this.model.mode == 2 ? '' : 'disabled'}">Select File...</button>
+                <button class="btn select-file" ${this.model.mode == 2 ? '' : 'disabled'}>Select File...</button>
                 <label class="file-label">${this.getFileName()}</label>
+                <div class="form-check mt-1">
+                    <input type="checkbox" name="upload-data" value="1" ${this.model.mode == 2 ? '' : 'disabled'} checked id="schema-upload-data" />
+                    <label for="schema-upload-data">Upload data as well as schema</label>
+                </div>
             </div>
 
             <div class="dlg-button-row">
                 <button class="btn btn-danger close-dialog">Cancel</button>
-                <button class="btn btn-success create-schema ${this.readyToGo() ? '' : 'disabled'}">Create</button>
+                <button class="btn btn-success create-schema" ${this.readyToGo() ? '' : 'disabled'}>Create</button>
             </div>
         `;
         render('#content', html);

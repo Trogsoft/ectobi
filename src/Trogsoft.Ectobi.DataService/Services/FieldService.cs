@@ -1,5 +1,6 @@
 ﻿using Microsoft.EntityFrameworkCore;
 using System;
+using System.Net.Mail;
 using Trogsoft.Ectobi.Common;
 using Trogsoft.Ectobi.Common.Interfaces;
 using Trogsoft.Ectobi.Data;
@@ -9,7 +10,7 @@ namespace Trogsoft.Ectobi.DataService.Services
     public class FieldService : IFieldService
     {
 
-        private const double UNIQUE_VALUE_MULTIPLIER = 0.98;
+        private const double UNIQUE_VALUE_MULTIPLIER = 0.925;
 
         private readonly ILogger<FieldService> logger;
         private readonly EctoDb db;
@@ -41,7 +42,7 @@ namespace Trogsoft.Ectobi.DataService.Services
 
         }
 
-        private async Task<Success<T>> validateField<T>(string schemaTid,  string fieldTid)
+        private async Task<Success<T>> validateField<T>(string schemaTid, string fieldTid)
         {
 
             if (string.IsNullOrWhiteSpace(fieldTid)) return Success<T>.Error("Field not specified.", ErrorCodes.ERR_ARGUMENT_NULL);
@@ -70,7 +71,10 @@ namespace Trogsoft.Ectobi.DataService.Services
             var latestVersion = db.SchemaVersions.Where(x => x.SchemaId == schema.Id).OrderByDescending(x => x.Version).FirstOrDefault();
             if (latestVersion == null) return Success<SchemaFieldEditModel>.Error("Schema has no versions.");
 
-            var field = db.SchemaFieldVersions.SingleOrDefault(x => x.SchemaVersionId == latestVersion.Id && x.SchemaField.TextId == fieldTid);
+            var field = db.SchemaFieldVersions
+                .Include(x => x.Populator)
+                .Include(x => x.LookupSet)
+                .SingleOrDefault(x => x.SchemaVersionId == latestVersion.Id && x.SchemaField.TextId == fieldTid);
             if (field == null) return Success<SchemaFieldEditModel>.Error("Field not found.", ErrorCodes.ERR_NOT_FOUND);
 
             return new Success<SchemaFieldEditModel>(mapper.Map<SchemaFieldEditModel>(field));
@@ -155,11 +159,11 @@ namespace Trogsoft.Ectobi.DataService.Services
             var transaction = db.Database.BeginTransaction();
 
             var latestVersion = db.SchemaVersions.Where(x => x.SchemaId == schema.Id).OrderByDescending(x => x.Version).FirstOrDefault();
+            var fieldVersion = mapper.Map<SchemaFieldVersion>(newField);
+            fieldVersion.SchemaField = newField;
+
             if (latestVersion != null)
             {
-                var fieldVersion = mapper.Map<SchemaFieldVersion>(newField);
-                fieldVersion.SchemaField = newField;
-
                 if (!string.IsNullOrWhiteSpace(model.Populator) && mm.PopulatorExists(model.Populator))
                     fieldVersion.PopulatorId = mm.GetPopulatorDatabaseId(model.Populator);
 
@@ -170,7 +174,7 @@ namespace Trogsoft.Ectobi.DataService.Services
             try
             {
                 await db.SaveChangesAsync();
-                await iwh.Dispatch(WebHookEventType.FieldCreated, mapper.Map<SchemaFieldModel>(newField));
+                await iwh.Dispatch(WebHookEventType.FieldCreated, mapper.Map<SchemaFieldModel>(fieldVersion));
             }
             catch (Exception ex)
             {
@@ -199,19 +203,8 @@ namespace Trogsoft.Ectobi.DataService.Services
 
             var nonNullValueCount = x.RawValues.Count(y => y != null);
 
-            if (nonNullValueCount > (x.RawValues.Count * UNIQUE_VALUE_MULTIPLIER))
-                x.Flags |= SchemaFieldFlags.RequiredAtImport;
-
-            // Detect whole numbers
-            List<int?> numericValues = new();
-            x.RawValues.ForEach(x =>
-            {
-                if (Int32.TryParse(x, out int val))
-                    numericValues.Add(val);
-            });
-
-            if (numericValues.Count == nonNullValueCount)
-                x.Type = SchemaFieldType.Integer;
+            //if (nonNullValueCount > (x.RawValues.Count * UNIQUE_VALUE_MULTIPLIER))
+            //    x.Flags |= SchemaFieldFlags.RequiredAtImport;
 
             // Detect decimal values
             List<decimal?> decimalValues = new();
@@ -221,12 +214,56 @@ namespace Trogsoft.Ectobi.DataService.Services
                     decimalValues.Add(val);
             });
 
+            // Detect whole numbers
+            List<int?> numericValues = new();
+            x.RawValues.ForEach(x =>
+            {
+                if (Int32.TryParse(x, out int val))
+                    numericValues.Add(val);
+            });
+
             if (decimalValues.Count == nonNullValueCount)
                 x.Type = SchemaFieldType.Decimal;
 
+            if (numericValues.Count == nonNullValueCount)
+                x.Type = SchemaFieldType.Integer;
+
+            // Detect dates
+            List<DateTime?> dateTimes = new List<DateTime?>();
+            x.RawValues.ForEach(x =>
+            {
+                if (DateTime.TryParse(x, out DateTime val))
+                    dateTimes.Add(val);
+            });
+
+            if (dateTimes.Count == nonNullValueCount)
+                x.Type = SchemaFieldType.DateTime;
+
+            // Emails
+            //List<string> emails = new List<string>();
+            //x.RawValues.ForEach(x =>
+            //{
+            //    try
+            //    {
+            //        new MailAddress(x);
+            //        emails.Add(x);
+            //    }
+            //    catch
+            //    {
+            //        // Don't care
+            //    }
+            //});
+
+            //if (emails.Count == nonNullValueCount)
+            //{
+            //    x.Type = SchemaFieldType.Text;
+            //    // todo: Add a validator
+            //}
+
+
             // Detect a set
             var uniqueNonNullValues = x.RawValues.Where(y => !string.IsNullOrWhiteSpace(y)).Distinct();
-            var maxUniqueValues = 30;
+            var maxUniqueValues = 50;
             if (uniqueNonNullValues.Count() <= maxUniqueValues)
             {
                 x.Type = SchemaFieldType.Set;

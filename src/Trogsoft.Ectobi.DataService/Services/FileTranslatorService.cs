@@ -41,5 +41,23 @@ namespace Trogsoft.Ectobi.DataService.Services
             return new Success<List<SchemaFieldEditModel>>(list);
 
         }
+
+        public async Task<Success<ValueMap>> GetValueMap(BinaryFileModel file)
+        {
+
+            var extension = file.Filename?.Split('.').Last();
+            if (extension == null) return Success<ValueMap>.Error("Filename not specified.", ErrorCodes.ERR_ARGUMENT_NULL);
+
+            var handler = mm.GetFileHandlerForFileExtension(extension);
+            if (handler == null) return Success<ValueMap>.Error("File not supported.", ErrorCodes.ERR_FILE_NOT_SUPPORTED);
+
+            var loadResult = handler.LoadFile(file);
+            if (!loadResult.Succeeded)
+                return Success<ValueMap>.Error(loadResult.StatusMessage ?? "Unable to load file.", ErrorCodes.ERR_LOAD_FILE_FAILED);
+
+            var map = handler.GetValueMap();
+            return map;
+
+        }
     }
 }

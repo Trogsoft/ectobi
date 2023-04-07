@@ -1,4 +1,4 @@
-export class ectoClient {
+class ectoApiClient {
 
     host = 'localhost:7247';
     constructor() {
@@ -48,7 +48,9 @@ export class ectoClient {
 
     batch = {
         list: (schemaTid) => this.get(`api/batch/${schemaTid}`),
-        createEmpty: (batchModel) => this.postJson(`api/batch/empty`, batchModel)
+        createEmpty: (batchModel) => this.postJson(`api/batch/empty`, batchModel),
+        upload: (model) => this.postJson('api/batch', model),
+        delete: (id) => this.delete(`api/batch/${id}`)
     };
 
     field = {
@@ -79,3 +81,7 @@ export class ectoClient {
     }
 
 }
+
+const ectoClient = new ectoApiClient();
+
+export { ectoClient };

@@ -107,7 +107,7 @@ export class schemaFields extends ectoTabComponent {
                 },
                 type: {
                     label: 'Type',
-                    format: x => fieldType[x] ?? x
+                    format: x => fieldType.getName(x) ?? x
                 },
                 flags: {
                     label: 'Flags',
