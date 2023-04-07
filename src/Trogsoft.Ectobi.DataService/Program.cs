@@ -93,7 +93,7 @@ namespace Trogsoft.Ectobi.DataService
 
             app.UseAuthorization();
 
-            app.MapHub<EventHub>("/events");
+            app.MapHub<EctoEventHub>("/events");
             app.MapControllers();
 
             app.Run();
