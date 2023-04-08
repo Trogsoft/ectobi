@@ -1,11 +1,12 @@
 ﻿using AutoMapper.Internal.Mappers;
+using Microsoft.AspNetCore.Identity.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore;
 using System.Security.Cryptography.X509Certificates;
 using System.Text.RegularExpressions;
 
 namespace Trogsoft.Ectobi.Data
 {
-    public class EctoDb : DbContext
+    public class EctoDb : IdentityDbContext<EctoUser, EctoRole, Guid>
     {
         public EctoDb(DbContextOptions options) : base(options)
         {

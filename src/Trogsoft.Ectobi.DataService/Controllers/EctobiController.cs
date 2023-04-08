@@ -16,18 +16,18 @@ namespace Trogsoft.Ectobi.DataService.Controllers
             this.whm = whm;
         }
 
-        [Route("api/ecto/populator")]
+        [HttpGet, Route("api/ecto/populator")]
         public async Task<IActionResult> GetPopulators() => SuccessResponse(mm.GetPopulatorDefinitions());
 
-        [Route("api/ecto/importer")]
+        [HttpGet, Route("api/ecto/importer")]
         public async Task<IActionResult> GetFileImporters() => SuccessResponse(mm.GetFileHandlers());
 
         #region Web Hook Management
 
-        [Route("api/ecto/webhook")]
+        [HttpGet, Route("api/ecto/webhook")]
         public async Task<IActionResult> GetWebHooks() => SuccessResponse(await whm.GetWebHooks());
 
-        [Route("api/ecto/webhook/{id}")]
+        [HttpGet, Route("api/ecto/webhook/{id}")]
         public async Task<IActionResult> GetWebHook(long id) => SuccessResponse(await whm.GetWebHook(id));
 
         #endregion 

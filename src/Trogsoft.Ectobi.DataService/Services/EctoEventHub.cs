@@ -2,7 +2,7 @@
 
 namespace Trogsoft.Ectobi.DataService.Services
 {
-    public class EventHub : Hub
+    public class EctoEventHub : Hub
     {
 
     }

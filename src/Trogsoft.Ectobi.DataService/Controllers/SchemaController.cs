@@ -1,10 +1,11 @@
-﻿using Microsoft.AspNetCore.Mvc;
+﻿using Microsoft.AspNetCore.Authorization;
+using Microsoft.AspNetCore.Mvc;
 using Trogsoft.Ectobi.Common;
 using Trogsoft.Ectobi.Common.Interfaces;
 
 namespace Trogsoft.Ectobi.DataService.Controllers
 {
-    [Route("api/schema")]
+    [Route("api/schema"), Authorize]
     public class SchemaController : EctoApiController
     {
         private readonly ISchemaService schema;
@@ -14,16 +15,16 @@ namespace Trogsoft.Ectobi.DataService.Controllers
             this.schema = schema;
         }
 
-        [HttpPost]
+        [HttpPost, Authorize(Roles ="SchemaCreate")]
         public async Task<IActionResult> CreateSchema([FromBody] SchemaEditModel model) => SuccessResponse(await schema.CreateSchema(model));
 
-        [HttpDelete("{schemaTid}")]
+        [HttpDelete("{schemaTid}"), Authorize(Roles ="SchemaDelete")]
         public async Task<IActionResult> DeleteSchema(string schemaTid) => SuccessResponse(await schema.DeleteSchema(schemaTid));
 
-        [HttpGet]
+        [HttpGet, Authorize(Roles = "SchemaRead")]
         public async Task<IActionResult> ListSchemas(bool includeDetail = false) => SuccessResponse(await schema.GetSchemas(includeDetail));
 
-        [HttpGet("{textId}")]
+        [HttpGet("{textId}"), Authorize(Roles = "SchemaRead")]
         public async Task<IActionResult> GetSchema(string textId) => SuccessResponse(await schema.GetSchema(textId));
 
         // Versions
