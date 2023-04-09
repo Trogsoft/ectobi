@@ -1,6 +1,6 @@
 # Ectobi
 
-![image](https://user-images.githubusercontent.com/1470251/230767700-203db134-3d42-4613-a1d5-ba9cc0444d1f.png)
+![image](https://user-images.githubusercontent.com/1470251/230767837-ae75446b-b3ff-42fd-be3e-5f0fbf96c192.png)
 
 ## What is it?
 
