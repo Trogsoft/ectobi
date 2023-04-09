@@ -1,5 +1,7 @@
 # Ectobi
 
+![image](https://user-images.githubusercontent.com/1470251/230767700-203db134-3d42-4613-a1d5-ba9cc0444d1f.png)
+
 ## What is it?
 
 It's a suite of tools which are intended to take data from some sort of raw form and take it through to a final state where it can be reported on live, or turned into static reports or some other kind of output.
