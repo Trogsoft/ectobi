@@ -1,10 +1,12 @@
-﻿using Microsoft.AspNetCore.Mvc;
+﻿using Microsoft.AspNetCore.Authorization;
+using Microsoft.AspNetCore.Mvc;
 using Trogsoft.Ectobi.Common;
 using Trogsoft.Ectobi.Common.Interfaces;
 
 namespace Trogsoft.Ectobi.DataService.Controllers
 {
     [Route("api/field")]
+    [Authorize(Roles = "Administrator,FieldManager")]
     public class FieldController : EctoApiController
     {
         private readonly IFieldService fields;

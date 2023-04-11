@@ -11,6 +11,10 @@ using Trogsoft.Ectobi.Common.Interfaces;
 using Trogsoft.Ectobi.Data;
 using Trogsoft.Ectobi.DataService.Interfaces;
 using Trogsoft.Ectobi.DataService.Services;
+using System.Linq;
+using System.Security.Cryptography.Xml;
+using Microsoft.AspNetCore.Authorization;
+using Trogsoft.Ectobi.Common;
 
 namespace Trogsoft.Ectobi.DataService
 {
@@ -18,12 +22,14 @@ namespace Trogsoft.Ectobi.DataService
     {
         private static bool setupMode;
         private static bool forceMode;
+        private static bool noSecurityMode;
 
         public static void Main(string[] args)
         {
 
             setupMode = args.Contains("--setup-default", StringComparer.CurrentCultureIgnoreCase);
             forceMode = args.Contains("--force", StringComparer.CurrentCultureIgnoreCase);
+            noSecurityMode = args.Contains("--no-security", StringComparer.CurrentCultureIgnoreCase);
 
             var localConfigPath = new LocalConfigFileProvider();
 
@@ -50,7 +56,8 @@ namespace Trogsoft.Ectobi.DataService
             // For Identity
             builder.Services.AddIdentity<EctoUser, EctoRole>(opts =>
             {
-                if (setupMode) {
+                if (setupMode)
+                {
                     opts.Password.RequireNonAlphanumeric = false;
                     opts.Password.RequireLowercase = false;
                     opts.Password.RequireDigit = false;
@@ -94,8 +101,11 @@ namespace Trogsoft.Ectobi.DataService
             builder.Services.AddTransient<IWebHookManagementService, WebHookManagementService>();
             builder.Services.AddTransient<IFileTranslatorService, FileTranslatorService>();
             builder.Services.AddSingleton<IBackgroundTaskCoordinator, BackgroundTaskCoordinator>();
-            builder.Services.AddSingleton<IAuthService, AuthService>();
+            builder.Services.AddTransient<IAuthService, UserService>();
             builder.Services.AddTransient<IEctoMapper, EctoMapper>();
+            builder.Services.AddTransient<IEctoServer, EctoServer>();
+            builder.Services.AddTransient<IRandomStringService, RandomStringService>();
+            builder.Services.AddTransient<IDataService, Services.DataService>();
 
             builder.Services.AddControllers();
             builder.Services.AddSignalR();
@@ -139,6 +149,13 @@ namespace Trogsoft.Ectobi.DataService
             builder.Services.AddEndpointsApiExplorer();
             builder.Services.AddSwaggerGen();
 
+            var customServerName = builder.Configuration.GetSection("Ectobi")?.GetValue<string>("ServerName");
+            builder.Services.Configure<EctoServerModel>(opt =>
+            {
+                opt.RequiresLogin = !noSecurityMode;
+                opt.Name = customServerName ?? Environment.MachineName;
+            });
+
             var app = builder.Build();
 
             if (setupMode)
@@ -153,14 +170,20 @@ namespace Trogsoft.Ectobi.DataService
                 app.UseSwaggerUI();
                 if (!setupMode) app.UseHangfireDashboard();
             }
-
-            app.UseHttpsRedirection();
+            else
+            {
+                app.UseHttpsRedirection();
+            }
 
             app.UseAuthentication();
             app.UseAuthorization();
 
             app.MapHub<EctoEventHub>("/events");
-            app.MapControllers();
+
+            if (noSecurityMode)
+                app.MapControllers().WithMetadata(new AllowAnonymousAttribute());
+            else
+                app.MapControllers();
 
             if (!setupMode)
                 app.Run();
@@ -174,9 +197,11 @@ namespace Trogsoft.Ectobi.DataService
 
             using (var scope = app.Services.CreateScope())
             {
+
                 var userManager = scope.ServiceProvider.GetRequiredService<UserManager<EctoUser>>();
                 var db = scope.ServiceProvider.GetRequiredService<EctoDb>();
                 var logger = scope.ServiceProvider.GetRequiredService<ILogger<Program>>();
+                var rm = scope.ServiceProvider.GetRequiredService<RoleManager<EctoRole>>();
 
                 int userCount = db.Users.Count();
                 if (userCount > 0 && !forceMode)
@@ -184,12 +209,27 @@ namespace Trogsoft.Ectobi.DataService
                     logger.LogError("Ectobi is already configured. Specify --force to reset to defaults.");
                     return;
                 }
+                else if (userCount > 0 && forceMode)
+                {
+                    logger.LogInformation("Resetting to default.");
+                    db.Users.RemoveRange(db.Users);
+                    db.SaveChanges();
+                }
 
                 logger.LogInformation("Creating default administrative user.");
 
+                rm.CreateAsync(new EctoRole { Name = "Administrator" }).Wait();
+                rm.CreateAsync(new EctoRole { Name = "SchemaManager" }).Wait();
+                rm.CreateAsync(new EctoRole { Name = "FieldManager" }).Wait();
+                rm.CreateAsync(new EctoRole { Name = "BatchManager" }).Wait();
+                rm.CreateAsync(new EctoRole { Name = "WebHookManager" }).Wait();
+                rm.CreateAsync(new EctoRole { Name = "LookupManager" }).Wait();
+                rm.CreateAsync(new EctoRole { Name = "FormManager" }).Wait();
+                rm.CreateAsync(new EctoRole { Name = "DataEntryOperator" }).Wait();
+
                 var result = userManager.CreateAsync(new EctoUser
                 {
-                    Email = "me@example.com",
+                    Email = "ectobi@example.com",
                     EmailConfirmed = true,
                     UserName = "ectobi"
                 }, "ectobi")
@@ -198,6 +238,12 @@ namespace Trogsoft.Ectobi.DataService
                 if (!result.Succeeded)
                 {
                     result.Errors.ToList().ForEach(Console.WriteLine);
+                }
+                else
+                {
+                    logger.LogInformation("Adding user to Administrator role.");
+                    var user = userManager.FindByNameAsync("ectobi").Result;
+                    userManager.AddToRoleAsync(user, "Administrator").Wait();
                 }
 
                 logger.LogInformation("Default setup done.");

@@ -15,24 +15,24 @@ namespace Trogsoft.Ectobi.DataService.Controllers
             this.schema = schema;
         }
 
-        [HttpPost, Authorize(Roles ="SchemaCreate")]
+        [HttpPost, Authorize(Roles ="Administrator,SchemaManager")]
         public async Task<IActionResult> CreateSchema([FromBody] SchemaEditModel model) => SuccessResponse(await schema.CreateSchema(model));
 
-        [HttpDelete("{schemaTid}"), Authorize(Roles ="SchemaDelete")]
+        [HttpDelete("{schemaTid}"), Authorize(Roles = "Administrator,SchemaManager")]
         public async Task<IActionResult> DeleteSchema(string schemaTid) => SuccessResponse(await schema.DeleteSchema(schemaTid));
 
-        [HttpGet, Authorize(Roles = "SchemaRead")]
+        [HttpGet, Authorize(Roles = "Administrator,SchemaManager")]
         public async Task<IActionResult> ListSchemas(bool includeDetail = false) => SuccessResponse(await schema.GetSchemas(includeDetail));
 
-        [HttpGet("{textId}"), Authorize(Roles = "SchemaRead")]
+        [HttpGet("{textId}"), Authorize(Roles = "Administrator,SchemaManager")]
         public async Task<IActionResult> GetSchema(string textId) => SuccessResponse(await schema.GetSchema(textId));
 
         // Versions
 
-        [HttpGet("{schemaTid}/versions")]
+        [HttpGet("{schemaTid}/versions"), Authorize(Roles = "Administrator,SchemaManager")]
         public async Task<IActionResult> GetSchemaVersions(string schemaTid) => SuccessResponse(await schema.GetSchemaVersions(schemaTid));
 
-        [HttpPost("{schemaTid}/versions")]
+        [HttpPost("{schemaTid}/versions"), Authorize(Roles = "Administrator,SchemaManager")]
         public async Task<IActionResult> CreateSchemaVersion([FromBody] SchemaVersionEditModel model) => SuccessResponse(await schema.CreateSchemaVersion(model));
 
     }

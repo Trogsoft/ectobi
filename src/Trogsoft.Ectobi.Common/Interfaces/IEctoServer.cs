@@ -6,9 +6,8 @@ using System.Threading.Tasks;
 
 namespace Trogsoft.Ectobi.Common.Interfaces
 {
-    public interface IAuthService
+    public interface IEctoServer
     {
-        Task<Success<EctoToken>> Login(LoginModel model);
-        Task<Success<EctoToken>> RefreshToken(EctoToken token);
+        Task<Success<EctoServerModel>> GetServerModel();
     }
 }

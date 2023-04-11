@@ -7,7 +7,7 @@ using Trogsoft.Ectobi.Data;
 
 namespace Trogsoft.Ectobi.DataService.Controllers
 {
-    [Route("auth")]
+    [Route("api/auth")]
     public class AuthController : EctoApiController
     {
         private readonly IAuthService ias;
@@ -17,8 +17,11 @@ namespace Trogsoft.Ectobi.DataService.Controllers
             this.ias = ias;
         }
 
-        [HttpPost]
+        [HttpPost, AllowAnonymous]
         public async Task<IActionResult> Login([FromBody] LoginModel model) => SuccessResponse(await ias.Login(model));
+
+        [HttpPost("refresh-token")]
+        public async Task<IActionResult> RefreshToken([FromBody] EctoToken token) => SuccessResponse(await ias.RefreshToken(token));
 
     }
 }

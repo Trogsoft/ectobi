@@ -8,5 +8,7 @@ namespace Trogsoft.Ectobi.Common
 {
     public class EctoToken
     {
+        public string Token { get; set; }
+        public string RefreshToken { get; set; }
     }
 }
