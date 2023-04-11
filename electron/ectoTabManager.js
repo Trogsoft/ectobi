@@ -6,6 +6,7 @@ import { schemaRecordEditor, schemaUploads } from './tabs/schemaUploads.js';
 import { lookupManager } from './tabs/lookupManager.js';
 import { schemaDetail } from './schemaDetail.js';
 import { webHookManager } from './tabs/webHookManager.js';
+import { schemaData } from './tabs/schemaData.js';
 
 export class ectoTabManager extends ectoCoreComponent {
 
@@ -17,7 +18,8 @@ export class ectoTabManager extends ectoCoreComponent {
         'schemaFieldEditor': schemaFieldEditor,
         'lookupManager': lookupManager,
         'schemaDetail': schemaDetail,
-        'webHookManager': webHookManager
+        'webHookManager': webHookManager,
+        'schemaData': schemaData
     };
 
     currentIndex = -1;

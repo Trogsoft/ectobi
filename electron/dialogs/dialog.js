@@ -12,17 +12,25 @@ export const dialogs = {
     'fieldEditorDialog': fieldEditorDialog
 }
 
+var dialogInstance;
+
 window.addEventListener('DOMContentLoaded', x => {
 
     window.ipc.dialogConfiguration((event, value) => {
+        window.ipc.getToken().then(token=>{
+            if (value.dialogType) {
+                var dt = dialogs[value.dialogType];
+                if (dt) {
+                    dialogInstance = new dt(event.sender, value, token);
+                }
+            }    
+        })
+    });
 
-        if (value.dialogType) {
-            var dt = dialogs[value.dialogType];
-            if (dt) {
-                new dt(event.sender, value);
-            }
-        }
-
+    window.ipc.tokenRefresh((event) => {
+        window.ipc.getToken().then(token=>{
+            dialogInstance.tokenUpdate(token);
+        })
     });
 
 })

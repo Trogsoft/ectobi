@@ -1,11 +1,12 @@
 ﻿using AutoMapper.Internal.Mappers;
+using Microsoft.AspNetCore.Identity.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore;
 using System.Security.Cryptography.X509Certificates;
 using System.Text.RegularExpressions;
 
 namespace Trogsoft.Ectobi.Data
 {
-    public class EctoDb : DbContext
+    public class EctoDb : IdentityDbContext<EctoUser, EctoRole, Guid>
     {
         public EctoDb(DbContextOptions options) : base(options)
         {
@@ -31,6 +32,7 @@ namespace Trogsoft.Ectobi.Data
         public DbSet<Stage> Stages { get; set; }
         public DbSet<WebHookEvent> WebHookEvents { get; set; }
         public DbSet<WebHook> WebHooks {  get; set; }
+        public DbSet<UserRefreshToken> RefreshTokens { get; set; } 
 
         public string GetTextId<TEntity>(string title, Func<TEntity, bool> qualifier = null!) where TEntity : NamedEntity
         {

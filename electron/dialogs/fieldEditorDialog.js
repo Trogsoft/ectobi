@@ -5,7 +5,6 @@ import { dialogBase } from "./dialogBase.js";
 
 export class fieldEditorDialog extends dialogBase {
 
-    client = ectoClient;
     populators = [];
     lookups = [];
 
@@ -15,8 +14,8 @@ export class fieldEditorDialog extends dialogBase {
         description: null
     };
 
-    constructor(sender, arg) {
-        super(sender, arg);
+    constructor(sender, arg, token) {
+        super(sender, arg, token);
 
         this.client.populator.list().then(pl=>{
             this.populators = pl.result;

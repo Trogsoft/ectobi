@@ -5,7 +5,6 @@ import { dialogBase } from "./dialogBase.js";
 export class newSchemaDialog extends dialogBase {
 
     values;
-    client = ectoClient;
 
     fileContent;
 
@@ -16,8 +15,8 @@ export class newSchemaDialog extends dialogBase {
         description: null
     };
 
-    constructor(sender, arg) {
-        super(sender, arg);
+    constructor(sender, arg, token) {
+        super(sender, arg, token);
         this.setTitle('New Schema');
         this.render();
     }

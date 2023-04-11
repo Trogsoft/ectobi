@@ -6,11 +6,10 @@ import { dialogBase } from "./dialogBase.js";
 export class lookupValuesDialog extends dialogBase {
 
     values;
-    client = ectoClient;
     table;
 
-    constructor(sender, arg) {
-        super(sender, arg);
+    constructor(sender, arg, token) {
+        super(sender, arg, token);
         this.setTitle('Lookup Values');
 
         this.table = new table({

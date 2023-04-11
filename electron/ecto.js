@@ -3,55 +3,41 @@ import { ectoStatusBar } from "./ectoStatusBar.js";
 import { ectoTree } from "./ectoTree.js";
 import { render } from './js/reef/reef.es.js';
 import { ectoToolbar } from "./toolbar.js";
-import { ectoComponent, ectoCoreComponent } from './components.js';
+import { ectoComponent } from './components.js';
 import { ectoTabManager } from "./ectoTabManager.js";
-
-class bgRoot extends ectoCoreComponent {
-
-    notifications = 0;
-
-    constructor(ecto, target) {
-        super(ecto,target);
-    }
-
-    render() {    
-        var html = `
-            <div class="icon"><i class="ri-settings-5-fill"></i></div>
-            <div class="label">Background Tasks</div>
-        `;
-
-        if (this.notifications > 0) {
-            html += `<div class="badge">${this.notifications}</div>`;            
-        }
-        render(this.target, html);    
-    }
-
-}
+import { bgRoot } from "./bgRoot.js";
 
 class ectobi extends ectoComponent {
 
     // This is the API client
-    client = ectoClient;
+    client;
 
     // These are the main UI components
     tree;
     statusBar;
     toolbar;
     tabManager;
+    token;
 
-    constructor() {
+    serverInfo;
+
+    constructor(token) {
         super();
+        this.token = token;
+
+        this.client = new ectoClient(token);
         this.tree = new ectoTree(this, '.tree');
         this.toolbar = new ectoToolbar(this, '.toolbar');
         this.statusBar = new ectoStatusBar(this, '.status');
         this.tabManager = new ectoTabManager(this, '.tabs');
         this.bgStatus = new bgRoot(this, '#backgroundTaskStatus');
 
-        document.onreadystatechange = e => {
-            if (document.readyState === "complete") {
-                this.render();
-            }
-        }
+        this.client.getServerInfo().then(si=>{
+            this.emit('serverInfo', si.result);
+            this.serverInfo = si.result
+        });
+
+        this.render();
     }
 
     render = () => {
@@ -103,6 +89,30 @@ class ectobi extends ectoComponent {
         this.tabManager.openTab(href);
     }
 
+    tokenUpdate = (token) => {
+        this.token = token;
+        this.client.updateToken(this.token);
+        console.log('Token updated: '+this.token);
+        this.emit('tokenRefresh', token);
+    }
+
 }
 
-const ectobiInstance = new ectobi();
+let ectobiInstance;
+document.onreadystatechange = (e) => {
+    if (document.readyState == 'complete') {
+        if (window.ipc && window.ipc.getToken) {
+            window.ipc.getToken().then(token=>{
+                ectobiInstance = new ectobi(token);
+            });
+        }   
+    }
+}
+
+window.addEventListener('DOMContentLoaded', x => {
+    window.ipc.tokenRefresh((event) => {
+        window.ipc.getToken().then(token=>{
+            ectobiInstance.tokenUpdate(token);
+        })
+    });
+});      

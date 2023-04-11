@@ -5,8 +5,6 @@ import { dialogBase } from "./dialogBase.js";
 
 export class webHookEditorDialog extends dialogBase {
 
-    client = ectoClient;
-
     model = {
         id: 0,
         name: '',
@@ -14,8 +12,8 @@ export class webHookEditorDialog extends dialogBase {
         url: ''
     };
 
-    constructor(sender, arg) {
-        super(sender, arg);
+    constructor(sender, arg, token) {
+        super(sender, arg, token);
         if (arg.id > 0) {
             this.client.webhook.get(arg.id).then(x => {
                 this.model = x.result;

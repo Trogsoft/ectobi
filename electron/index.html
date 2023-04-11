@@ -5,14 +5,12 @@
     <!-- https://developer.mozilla.org/en-US/docs/Web/HTTP/CSP -->
     <meta
       http-equiv="Content-Security-Policy"
-      content="default-src 'self'; script-src 'self' localhost; connect-src https://localhost:7247"
-    />
-    <meta
-      http-equiv="X-Content-Security-Policy"
-      content="default-src 'self'; script-src 'self' localhost; connect-src https://localhost:7247"
+      content="default-src 'self'; script-src 'self' localhost; connect-src https://localhost:7247;  style-src 'self' 'unsafe-inline';"
     />
     <link rel="stylesheet" href="./fonts.css" />
     <link rel="stylesheet" href="./css/ectobi.css" />
+    <link rel="stylesheet" href="./css/agGrid/ag-grid.min.css" />
+    <link rel="stylesheet" href="./css/agGrid/ag-theme-alpine-no-font.min.css" />
     <title>Ectobi</title>
 
   </head>

@@ -11,6 +11,8 @@ namespace Trogsoft.Ectobi.DataService
 
         string path;
 
+        public string LocalConfigPath { get => path; }
+
         public LocalConfigFileProvider()
         {
             var root = Environment.GetFolderPath(Environment.SpecialFolder.LocalApplicationData);

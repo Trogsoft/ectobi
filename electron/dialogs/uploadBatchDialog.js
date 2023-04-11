@@ -6,12 +6,11 @@ export class uploadBatchDialog extends dialogBase {
 
     selectedFiles = [];
     importers = [];
-    client = ectoClient;
     uploadTasks = [];
     completedTasks = 0;
 
-    constructor(sender, arg) {
-        super(sender, arg);
+    constructor(sender, arg, token) {
+        super(sender, arg, token);
         this.client.importer.list().then(x => {
             this.importers = x.result;
             this.render();

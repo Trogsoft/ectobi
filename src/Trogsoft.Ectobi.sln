@@ -13,7 +13,9 @@ Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "Trogsoft.Ectobi.Client", "T
 EndProject
 Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "Trogsoft.Ectobi.Data", "Trogsoft.Ectobi.Data\Trogsoft.Ectobi.Data.csproj", "{DCD9C58E-6DD7-49DA-8C01-0469FD890A7E}"
 EndProject
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Trogsoft.Ectobi.BatchOperations", "Trogsoft.Ectobi.BatchOperations\Trogsoft.Ectobi.BatchOperations.csproj", "{18CC8DE0-1B3E-41C4-9F8F-FAF015DA5701}"
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "Trogsoft.Ectobi.BatchOperations", "Trogsoft.Ectobi.BatchOperations\Trogsoft.Ectobi.BatchOperations.csproj", "{18CC8DE0-1B3E-41C4-9F8F-FAF015DA5701}"
+EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Trogsoft.Ectobi.DataService.Test", "Trogsoft.Ectobi.DataService.Test\Trogsoft.Ectobi.DataService.Test.csproj", "{BC51A7DB-B815-44CC-986C-8ADE659FAE0C}"
 EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
@@ -45,6 +47,10 @@ Global
 		{18CC8DE0-1B3E-41C4-9F8F-FAF015DA5701}.Debug|Any CPU.Build.0 = Debug|Any CPU
 		{18CC8DE0-1B3E-41C4-9F8F-FAF015DA5701}.Release|Any CPU.ActiveCfg = Release|Any CPU
 		{18CC8DE0-1B3E-41C4-9F8F-FAF015DA5701}.Release|Any CPU.Build.0 = Release|Any CPU
+		{BC51A7DB-B815-44CC-986C-8ADE659FAE0C}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{BC51A7DB-B815-44CC-986C-8ADE659FAE0C}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{BC51A7DB-B815-44CC-986C-8ADE659FAE0C}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{BC51A7DB-B815-44CC-986C-8ADE659FAE0C}.Release|Any CPU.Build.0 = Release|Any CPU
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE
