@@ -12,6 +12,9 @@
     "electron": "^23.2.0"
   },
   "dependencies": {
-    "reefjs": "^12.1.1"
+    "ag-grid-community": "^29.2.0",
+    "dayjs": "^1.11.7",
+    "reefjs": "^12.1.1",
+    "wretch": "^2.5.1"
   }
 }

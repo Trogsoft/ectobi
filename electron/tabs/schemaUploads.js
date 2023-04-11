@@ -33,7 +33,8 @@ export class schemaUploads extends ectoTabComponent {
                     label: 'Name'
                 },
                 created: {
-                    label: 'Created'
+                    label: 'Created',
+                    format: x => new Date(x).toLocaleString()
                 }
             }
         });
@@ -75,13 +76,13 @@ export class schemaUploads extends ectoTabComponent {
     deleteBatch = e => {
         window.ipc.confirm({
             message: 'Are you sure you want to delete this batch?'
-        }).then(x=>{
+        }).then(x => {
             if (x.response == 1) return;
 
             var id = this.table.getState().selectedItem.id;
-            this.ecto.client.batch.delete(id).then(x=>{
+            this.ecto.client.batch.delete(id).then(x => {
                 this.init(false);
-            }).catch(err=>{
+            }).catch(err => {
                 window.ipc.alert({ message: err.message });
             })
         })

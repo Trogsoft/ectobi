@@ -1,13 +1,25 @@
-class ectoApiClient {
+export class ectoClient {
 
     host = 'localhost:7247';
-    constructor() {
+    headers = {};
+    token;
+    
+    constructor(token) {
+        this.updateToken(token);
     }
 
-    get(url) {
+    updateToken = (token) =>{
+        this.token = token;
+        this.headers = {
+            'Authorization': 'Bearer ' + token
+        }
+    }
+
+    get = (url) => {
         return new Promise((resolve, reject) => {
             ajax({
-                url: `https://${this.host}/${url}`
+                url: `https://${this.host}/${url}`,
+                headers: this.headers
             }).get().then({
                 success: h => resolve(h),
                 fail: h => reject(h)
@@ -15,10 +27,11 @@ class ectoApiClient {
         });
     }
 
-    delete(url) {
+    delete = (url) => {
         return new Promise((resolve, reject) => {
             ajax({
-                url: `https://${this.host}/${url}`
+                url: `https://${this.host}/${url}`,
+                headers: this.headers
             }).delete().then({
                 success: h => resolve(h),
                 fail: h => reject(h)
@@ -26,16 +39,28 @@ class ectoApiClient {
         });
     }
 
-    postJson(url, model) {
-        return new Promise((resolve, reject)=>{
+
+    postJson = (url, model) => {
+        return new Promise((resolve, reject) => {
             ajax({
                 url: `https://${this.host}/${url}`,
-                data: model
+                data: model,
+                headers: this.headers
             }).postJson().then({
                 success: h => resolve(h),
                 fail: h => reject(h)
             })
         });
+    }
+
+    getServerInfo = () => this.get('api/ecto/server');
+
+    data = {
+        query: (query) => this.postJson('api/data/query', query)
+    }
+
+    auth = {
+        login: (username, password) => this.postJson('api/auth', { username: username, password: password })
     }
 
     schema = {
@@ -81,7 +106,3 @@ class ectoApiClient {
     }
 
 }
-
-const ectoClient = new ectoApiClient();
-
-export { ectoClient };

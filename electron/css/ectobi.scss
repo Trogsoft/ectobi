@@ -41,6 +41,19 @@ body {
     overflow: hidden;
 }
 
+.logo-bar {
+    background-color: $toolbar;
+    border-top: 1px solid $tb-dark;
+    border-bottom: 1px solid $tb-dark;
+    text-align: center;
+    padding: $pad * 2
+}
+
+#login-form {
+    width: 50%;
+    margin: $pad * 2 auto;
+}
+
 body.dialog {
     border: 1px solid $tb-dark;
     overflow: hidden;
@@ -272,9 +285,18 @@ $col in $btn-styles {
 
     .status {
         background-color: $toolbar;
-        min-height: 40px - $pad;
-        max-height: 40px - $pad;
-        padding: math.div($pad, 2); 
+        min-height: 50px - $pad;
+        max-height: 50px - $pad;
+        display: flex;
+        justify-content:space-between;
+        align-items: center;
+        .sb-panel {
+            padding: $pad $pad; //math.div($pad, 3); 
+            border-right: 1px solid $tb-dark;
+        }
+        .sb-panel:last-of-type {
+            border-right: unset;
+        }
     }
 
 }

@@ -11,6 +11,7 @@ const ajax = function (config) {
 
     a.url = config.url;
     a.data = config.data;
+    a.headers = config.headers || {};
 
     a.get = function () {
         var qs = '';
@@ -20,6 +21,11 @@ const ajax = function (config) {
             }).join('&');
         }
         xhr.open('get', a.url + (qs != '' ? '?' + qs : ''), true);
+        if (a.headers) {
+            Object.keys(a.headers).forEach(h => {
+                xhr.setRequestHeader(h, a.headers[h]);
+            })
+        }
         xhr.send();
         return a;
     }
@@ -32,6 +38,11 @@ const ajax = function (config) {
             }).join('&');
         }
         xhr.open('delete', a.url + (qs != '' ? '?' + qs : ''), true);
+        if (a.headers) {
+            Object.keys(a.headers).forEach(h => {
+                xhr.setRequestHeader(h, a.headers[h]);
+            })
+        }
         xhr.send();
         return a;
     }
@@ -43,8 +54,12 @@ const ajax = function (config) {
                 return encodeURIComponent(key) + '=' + encodeURIComponent(a.data[key])
             }).join('&');
         }
-
         xhr.open('post', a.url, true);
+        if (a.headers) {
+            Object.keys(a.headers).forEach(h => {
+                xhr.setRequestHeader(h, a.headers[h]);
+            })
+        }
         xhr.setRequestHeader('Content-Type', 'application/x-www-form-urlencoded');
         xhr.send(qs);
         return a;
@@ -53,6 +68,11 @@ const ajax = function (config) {
     a.postJson = function () {
 
         xhr.open('post', a.url);
+        if (a.headers) {
+            Object.keys(a.headers).forEach(h => {
+                xhr.setRequestHeader(h, a.headers[h]);
+            })
+        }
         xhr.setRequestHeader("Content-Type", "application/json;charset=UTF-8")
         xhr.send(JSON.stringify(a.data));
         return a;

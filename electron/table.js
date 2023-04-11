@@ -30,6 +30,27 @@ class table extends ectoComponent {
         this.#state.rowCount = this.#data.length;
     }
 
+    loadValueMap = (valueMap) => {
+        this.opts.headers = {}
+        valueMap.headings.forEach(x=>{
+            this.opts.headers[x] = {
+                name: x
+            }
+        });
+
+        this.#data = [];
+        valueMap.rows.forEach((row, rowix)=>{
+            var rowObject = { id: `row-${rowix}` };
+            row.forEach((col, colix)=>{
+                var head = valueMap.headings[colix];
+                rowObject[head] = col;
+            })
+            this.#data.push(rowObject);
+        });
+
+        this.render();
+    }
+
     render() {
 
         var headers = () => {

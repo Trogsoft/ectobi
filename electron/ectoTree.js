@@ -4,17 +4,24 @@ import { ectoComponent, ectoCoreComponent } from './components.js';
 export class ectoTree extends ectoCoreComponent {
 
     schemas = [];
+    serverInfo;
 
     constructor(ecto, target) {
         super(ecto, target);
+        document.addEventListener('ecto:serverInfo', this.serverInfoReceived);
         this.init();
+    }
+
+    serverInfoReceived = (si) => {
+        this.serverInfo = si.detail;
+        this.render();
     }
 
     init() {
         this.ecto.client.schema.list().then(h => {
             this.schemas = h.result;
             this.render();
-        });        
+        });
     }
 
     render() {
@@ -40,10 +47,19 @@ export class ectoTree extends ectoCoreComponent {
                 ${link('schemaUploads/' + s.textId, 'ri-upload-2-fill', 'Uploads')}
                 ${link('schemaVersions/' + s.textId, 'ri-grid-line', 'Versions')}
                 ${link('schemaFields/' + s.textId, 'ri-input-method-fill', 'Fields')}
-                ${link('webHookManager', 'ri-plug-fill', 'WebHook Configuration')}
                 </ul>
             </li>`;
         });
+
+        html += link('webHookManager', 'ri-plug-fill', 'WebHook Configuration');
+
+        if (this.serverInfo && this.serverInfo.userCapabilities) {
+            if (this.serverInfo.userCapabilities.canManageUsers) {
+                html += link('userManager', 'ri-user-fill', 'Users', true);
+                html += '<ul>' + link('roleManager', 'ri-user-settings-fill', 'Roles') + '</ul>';
+                html += '</li>';
+            }
+        }
 
         html += '</ul>';
         render('.tree', html);

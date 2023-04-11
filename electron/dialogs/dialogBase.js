@@ -1,15 +1,20 @@
+import { ectoClient } from "../ectoClient.js";
 
 export class dialogBase {
 
+    client;
     title;
     args;
     sender;
+    token;
 
     timers = {};
 
-    constructor(sender, args) {
+    constructor(sender, args, token) {
         this.sender = sender;
         this.args = args;
+        this.token = token;
+        this.client = new ectoClient(token);
     }
 
     setTitle(title) {
@@ -21,7 +26,6 @@ export class dialogBase {
             value = parseInt(value);
 
         this.model[field] = value;
-        console.log(this.model);
         this.render();
     }
 
@@ -50,6 +54,10 @@ export class dialogBase {
             cb.removeEventListener('input', this.modelFieldInput);
             cb.addEventListener('input', this.modelFieldInput);
         })
+    }
+
+    tokenUpdate = (token) =>{
+        this.client.updateToken(token);
     }
 
     close = (e) => {

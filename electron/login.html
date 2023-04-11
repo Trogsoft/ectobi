@@ -1,0 +1,44 @@
+<!DOCTYPE html>
+<html>
+  <head>
+    <meta charset="UTF-8" />
+    <!-- https://developer.mozilla.org/en-US/docs/Web/HTTP/CSP -->
+    <meta
+      http-equiv="Content-Security-Policy"
+      content="default-src 'self'; script-src 'self' localhost; connect-src https://localhost:7247"
+    />
+    <meta
+      http-equiv="X-Content-Security-Policy"
+      content="default-src 'self'; script-src 'self' localhost; connect-src https://localhost:7247"
+    />
+    <link rel="stylesheet" href="fonts.css" />
+    <link rel="stylesheet" href="css/ectobi.css" />
+    <title>Login</title>
+
+  </head>
+  <body class="dialog">
+
+    <div class="dlg-header">
+      <h1>Login</h1>
+      <a href="#" class="close-dialog"><i class="bi bi-x-lg"></i></a>
+    </div>
+
+    <div class="logo-bar"><img src="img/logo.png" height="120" /></div>
+
+    <div id="login-form">
+        <div class="form-field">
+            <label>Username</label>
+            <input type="text" name="username" class="form-control" />
+        </div>
+        <div class="form-field">
+            <label>Password</label>
+            <input type="password" name="password" class="form-control" />
+        </div>
+
+        <button class="btn btn-login btn-success">Login</button>
+    </div>
+
+    <script src="login.js" type="module"></script>
+    <script src="ajax.js"></script>
+  </body>
+</html>
