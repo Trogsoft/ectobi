@@ -174,6 +174,8 @@ namespace Trogsoft.Ectobi.DataService.Services
             try
             {
                 await db.SaveChangesAsync();
+
+
                 await iwh.Dispatch(WebHookEventType.FieldCreated, mapper.Map<SchemaFieldModel>(fieldVersion));
             }
             catch (Exception ex)
@@ -193,6 +195,32 @@ namespace Trogsoft.Ectobi.DataService.Services
 
         public void PopulateField(long fieldId)
         {
+
+            var field = db.SchemaFields.SingleOrDefault(x => x.Id == fieldId);
+            if (field == null) throw new Exception("Field not found.");
+
+            if (field.Type == SchemaFieldType.Populator)
+            {
+
+                var fv = db.SchemaFieldVersions.Include(x => x.Populator).Where(x => x.SchemaFieldId == fieldId).OrderByDescending(x => x.SchemaVersion.Version).FirstOrDefault();
+
+                foreach (var record in db.Records.Where(x => x.Batch.SchemaVersion.Fields.Any(y => y.SchemaFieldId == fieldId)))
+                {
+
+                    var populator = mm.GetPopulator(fv.Populator.Name);
+                    var recordField = db.Values.SingleOrDefault(x => x.RecordId == record.Id && x.SchemaFieldVersion.SchemaFieldId == fieldId);
+                    if (recordField == null)
+                        record.Values.Add(new Value
+                        {
+                            SchemaFieldVersionId = fv.Id,
+                            RawValue = populator.GetString()
+                        });
+
+                }
+
+                db.SaveChanges();
+
+            }
 
         }
 
