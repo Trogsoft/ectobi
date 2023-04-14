@@ -33,6 +33,7 @@ namespace Trogsoft.Ectobi.Data
         public DbSet<WebHookEvent> WebHookEvents { get; set; }
         public DbSet<WebHook> WebHooks {  get; set; }
         public DbSet<UserRefreshToken> RefreshTokens { get; set; } 
+        public DbSet<Model> Models { get; set; }
 
         public string GetTextId<TEntity>(string title, Func<TEntity, bool> qualifier = null!) where TEntity : NamedEntity
         {

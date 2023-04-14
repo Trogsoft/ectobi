@@ -153,6 +153,13 @@ export class schemaFields extends ectoTabComponent {
         });
     }
 
+    newModel = e => {
+        this.openDialog('modelEditorDialog', {
+            height: 500,
+            width: 700
+        });
+    }
+
     init(soft = false) {
         if (!soft) {
             this.client.field.list(this.data.path[0]).then(x => {
@@ -163,20 +170,34 @@ export class schemaFields extends ectoTabComponent {
 
         this.ecto.toolbar.add(this.idCode,
             {
-                addField: {
-                    type: 'button',
-                    label: 'Add Field',
-                    action: this.newField
+                addGroup: {
+                    type: 'group',
+                    controls: {
+                        addField: {
+                            icon: 'ri-input-method-fill',
+                            type: 'button',
+                            tooltip: 'Add Field',
+                            action: this.newField
+                        },
+                        addModel: {
+                            type: 'button',
+                            tooltip: 'Add Model',
+                            icon: 'ri-git-repository-fill',
+                            action: this.newModel
+                        }
+                    }
                 },
                 editField: {
                     type: 'button',
                     label: 'Edit',
+                    icon: 'ri-edit-fill',
                     action: this.editField,
                     enable: x => this.table.getState().selectedItemCount > 0
                 },
                 deleteField: {
                     type: 'button',
                     label: 'Delete',
+                    icon: 'ri-delete-bin-fill',
                     action: this.deleteField,
                     enable: x => this.table.getState().selectedItemCount > 0
                 },

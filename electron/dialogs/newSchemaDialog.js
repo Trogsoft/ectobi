@@ -85,6 +85,19 @@ export class newSchemaDialog extends dialogBase {
                 window.ipc.alert({ message: x.statusMessage });
 
             });
+        } else if (this.model.mode == 1) {
+
+            var model = {
+                name: this.model.name,
+                description: this.model.description,
+                file: null
+            };
+            this.client.schema.createEmpty(model).then(result=>{
+                window.ipc.closeMe();
+            }).catch(x=>{
+                window.ipc.alert({ message: x.statusMessage });
+            })
+
         }
 
     };

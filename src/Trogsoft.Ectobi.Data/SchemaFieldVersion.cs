@@ -18,6 +18,9 @@ namespace Trogsoft.Ectobi.Data
         public long? LookupSetId { get; set; }
         public LookupSet? LookupSet {  get; set; }
         public int DisplayOrder { get; set; }
+        public long? ModelId { get; set; }
+        public Model? Model { get; set; }
+        public string? ModelField { get; set; }
 
     }
 }

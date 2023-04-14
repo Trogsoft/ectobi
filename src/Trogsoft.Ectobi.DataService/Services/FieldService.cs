@@ -155,7 +155,6 @@ namespace Trogsoft.Ectobi.DataService.Services
             var newField = mapper.Map<SchemaField>(model);
             newField.TextId = db.GetTextId<SchemaField>($"{model.Name}");
 
-
             var transaction = db.Database.BeginTransaction();
 
             var latestVersion = db.SchemaVersions.Where(x => x.SchemaId == schema.Id).OrderByDescending(x => x.Version).FirstOrDefault();

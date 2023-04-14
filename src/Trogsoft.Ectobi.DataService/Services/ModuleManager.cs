@@ -44,7 +44,34 @@ namespace Trogsoft.Ectobi.DataService.Services
 
                 db.SaveChanges();
 
+                var models = 0;
+                foreach (var type in options.Models)
+                {
+                    if (!typeof(IEctoModel).IsAssignableFrom(type)) continue;
+                    if (db.Models.Any(x => x.TextId == type.Name)) continue;
+
+                    var newModel = new Model
+                    {
+                        Name = type.Name,
+                        TextId = type.Name,
+                        Handler = type.FullName
+                    };
+
+                    var ma = type.GetCustomAttribute<EctoModelAttribute>();
+                    if (ma != null)
+                    {
+                        newModel.Name = ma.Title;
+                        newModel.Description = ma.Description;
+                    }
+
+                    models++;
+                    db.Models.Add(newModel);
+                }
+
+                db.SaveChanges();
+
                 logger.LogInformation($"Persisted {populators} new populator(s).");
+                logger.LogInformation($"Persisted {models} new model(s).");
 
             }
         }
@@ -53,7 +80,10 @@ namespace Trogsoft.Ectobi.DataService.Services
             => options.Populators.Any(x => x.Name.Equals(populator, StringComparison.CurrentCultureIgnoreCase));
 
         public bool FileHandlerExists(string handler)
-            => options.FileImporters.Any(x=>x.Name.Equals(handler, StringComparison.CurrentCultureIgnoreCase));
+            => options.FileImporters.Any(x => x.Name.Equals(handler, StringComparison.CurrentCultureIgnoreCase));
+
+        public bool ModelExists(string model)
+            => options.Models.Any(x => x.Name.Equals(model, StringComparison.CurrentCultureIgnoreCase));
 
         public long? GetPopulatorDatabaseId(string populator)
         {
@@ -62,6 +92,17 @@ namespace Trogsoft.Ectobi.DataService.Services
                 var db = scope.ServiceProvider.GetService<EctoDb>();
                 if (db != null)
                     return db.Populators.SingleOrDefault(x => x.Name == populator)?.Id;
+            }
+            return null;
+        }
+
+        public long? GetModelDatabaseId(string model)
+        {
+            using (var scope = issf.CreateScope())
+            {
+                var db = scope.ServiceProvider.GetService<EctoDb>();
+                if (db != null)
+                    return db.Models.SingleOrDefault(x => x.Name == model)?.Id;
             }
             return null;
         }
@@ -84,7 +125,7 @@ namespace Trogsoft.Ectobi.DataService.Services
 
         }
 
-        public IFileHandler GetFileHandler(string name) 
+        public IFileHandler GetFileHandler(string name)
         {
             if (string.IsNullOrWhiteSpace(name)) throw new ArgumentNullException(nameof(name));
             if (!FileHandlerExists(name)) throw new Exception($"File Handler {name} does not exist.");
@@ -152,11 +193,82 @@ namespace Trogsoft.Ectobi.DataService.Services
                 pops.Add(new PopulatorModel
                 {
                     Name = populator.Name,
-                    TextId = populator.Name 
+                    TextId = populator.Name
                 });
 
             return new Success<List<PopulatorModel>>(pops);
 
+        }
+
+        public Success<List<EctoModelDefinition>> GetModelDefinitions()
+        {
+
+            List<EctoModelDefinition> models = new List<EctoModelDefinition>();
+            using (var scope = issf.CreateScope())
+            {
+                foreach (var model in options.Models)
+                {
+                    var modelDef = new EctoModelDefinition()
+                    {
+                        TextId = model.Name
+                    };
+
+                    var ma = model.GetCustomAttribute<EctoModelAttribute>();
+                    if (ma != null)
+                    {
+                        modelDef.Name = ma.Title;
+                        modelDef.Description = ma.Description;
+                    }
+                    else
+                    {
+                        modelDef.Name = model.Name;
+                    }
+
+                    var modelInstance = (IEctoModel)scope.ServiceProvider.GetRequiredService(model);
+                    var props = modelInstance.GetProperties().Result;
+                    if (props.Succeeded && props.Result != null)
+                        modelDef.Properties = props.Result;
+
+                    models.Add(modelDef);
+                }
+            }
+
+            return new Success<List<EctoModelDefinition>>(models);
+
+        }
+
+        public Success<EctoModelDefinition> GetModelDefinition(string modelTid)
+        {
+            using (var scope = issf.CreateScope())
+            {
+
+                var model = options.Models.SingleOrDefault(x => x.Name == modelTid);
+                if (model == null) return Success<EctoModelDefinition>.Error("Model not found.", ErrorCodes.ERR_NOT_FOUND);
+
+                var modelDef = new EctoModelDefinition()
+                {
+                    TextId = model.Name
+                };
+
+                var ma = model.GetCustomAttribute<EctoModelAttribute>();
+                if (ma != null)
+                {
+                    modelDef.Name = ma.Title;
+                    modelDef.Description = ma.Description;
+                }
+                else
+                {
+                    modelDef.Name = model.Name;
+                }
+
+                var modelInstance = (IEctoModel)scope.ServiceProvider.GetRequiredService(model);
+                var props = modelInstance.GetProperties().Result;
+                if (props.Succeeded && props.Result != null)
+                    modelDef.Properties = props.Result;
+
+                return new Success<EctoModelDefinition>(modelDef);
+
+            }
         }
     }
 }

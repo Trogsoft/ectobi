@@ -15,9 +15,9 @@ export class schemaData extends ectoTabComponent {
         super(ecto, target, data);
         this.idCode = data.path[0] + '-data';
 
-        // this.table = new table({
-        //     target: '.main',
-        // });
+        this.table = new table({
+            target: '.main',
+        });
 
     }
 
@@ -28,7 +28,7 @@ export class schemaData extends ectoTabComponent {
         if (!soft) {
             this.client.data.query({ schemaTid: this.data.path[0] }).then(h => {
                 this.tblData = h.result;
-                //this.table.loadValueMap(h.result);
+                this.table.loadValueMap(h.result);
                 this.render();
             });
         }
@@ -39,10 +39,10 @@ export class schemaData extends ectoTabComponent {
 
     getIdCode = () => this.idCode;
 
-    // setTarget(target) {
-    //     this.target = target;
-    //     this.table.setTarget(target);
-    // }
+    setTarget(target) {
+        this.target = target;
+        this.table.setTarget(target);
+    }
 
     beforeUnload() {
         document.removeEventListener('ecto:tableStateChanged', this.ecto.toolbar.render);
@@ -80,9 +80,10 @@ export class schemaData extends ectoTabComponent {
 
     render() {
         if (this.readyToRender()) { 
-            var html = `<div id="agGrid" style="width: 100%; height: 100%;" class="ag-theme-alpine"></div>`;
-            render(this.target, html);
-            this.renderGrid();
+            // var html = `<div id="agGrid" style="width: 100%; height: 100%;" class="ag-theme-alpine"></div>`;
+            // render(this.target, html);
+            // this.renderGrid();
+            this.table.render();
         }
     }
 

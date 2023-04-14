@@ -19,20 +19,32 @@ export class ectoToolbar extends ectoCoreComponent {
         this.render();
     }
 
-    handleControlClick = e => {
-        var controlId = e.currentTarget.getAttribute('data-control-id');
-        Object.keys(this.controls).forEach(group => {
-            Object.keys(this.controls[group]).forEach(control => {
-                if (control == controlId) {
-                    if (this.controls[group][control].action) {
-                        this.controls[group][control].action();
-                    } else {
-                        throw new Error('No action is configured for this control.');
-                    }
-                    return;
+    findControl = (controlId, controlCollection) => {
+        var result = null;
+        if (!controlCollection) {
+            Object.keys(this.controls).map(tlg => {
+                var r = this.findControl(controlId, this.controls[tlg]);
+                if (r) result = r;
+            });
+        } else {
+            Object.keys(controlCollection).map(key => {
+                var control = controlCollection[key];
+                if (key == controlId) result = control;
+                if (control.type && control.type == 'group') {
+                    var r = this.findControl(controlId, control.controls);
+                    if (r) result = r;
                 }
             });
-        });
+        }
+        return result;
+    }
+
+    handleControlClick = e => {
+        var controlId = e.currentTarget.getAttribute('data-control-id');
+        var control = this.findControl(controlId);
+        if (control != null) {
+            control.action();
+        }
     };
 
     render = () => {
@@ -46,6 +58,11 @@ export class ectoToolbar extends ectoCoreComponent {
         var renderControl = (id, c) => {
             var enabled = c.enable ? c.enable() : true;
             if (c.type == 'button' || !c.type) {
+                var tooltip = '';
+                if (c.tooltip) tooltip = `title="${c.tooltip}"`;
+                if (c.icon) {
+                    return `<button data-control-id="${id}" ${tooltip} class="btn" ${enabled ? '' : 'disabled'}><i class="${c.icon} ri-lg"></i> ${c.label || ''}</button>`;
+                }
                 return `<button data-control-id="${id}" class="btn" ${enabled ? '' : 'disabled'}>${c.label || 'Button'}</button>`;
             }
 
@@ -75,7 +92,16 @@ export class ectoToolbar extends ectoCoreComponent {
                 var controlGroup = this.controls[g];
                 Object.keys(controlGroup).forEach(c => {
                     var control = this.controls[g][c];
-                    html += renderControl(c, control);
+                    if (control.type == 'group') {
+                        html += '<div class="btn-group">';
+                        Object.keys(control.controls).forEach(subc => {
+                            var subcontrol = control.controls[subc];
+                            html += renderControl(subc, subcontrol);
+                        });
+                        html += '</div>';
+                    } else {
+                        html += renderControl(c, control);
+                    }
                 });
 
             });
@@ -95,7 +121,7 @@ export class ectoToolbar extends ectoCoreComponent {
             c.addEventListener('click', this.handleControlClick);
         });
 
-        el.querySelectorAll('.new-schema').forEach(c=>{
+        el.querySelectorAll('.new-schema').forEach(c => {
             c.removeEventListener('click', this.ecto.createNewSchema);
             c.addEventListener('click', this.ecto.createNewSchema);
         })

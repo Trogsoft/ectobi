@@ -8,22 +8,32 @@ class tokenManager {
   interval;
   tokenRefreshInterval = 240000; // 4 minutes
   main;
+  serverRequiresLogin = true;
 
   #token = null;
 
   constructor(main) {
     this.main = main;
+
+    // Request a new login token every refresh interval.
     this.interval = setInterval(this.refreshToken, this.tokenRefreshInterval);
 
     app.whenReady().then(() => {
-
+      // Handle the login event
       ipcMain.handle('login', this.login);
-
     });
   }
 
+  /**
+   * Refresh the current token.
+   */
   refreshToken = () => {
 
+    // Stand down. We don't need a refreshed token when login isn't required.
+    if (!this.serverRequiresLogin)
+      clearInterval(this.interval);
+
+    // Refresh the token then broadcast the event.
     wretch()
       .post(this.#token, `http://${this.main.server}/api/auth/refresh-token`)
       .json()
@@ -37,10 +47,25 @@ class tokenManager {
 
   }
 
+  /**
+   * Get the current token string
+   * @returns The current token or null.
+   */
   getCurrentToken = () => this.#token && this.#token.token ? this.#token.token : null;
 
-  requireLogin = () => this.#token == null;
+  /**
+   * Check if login is required. This considers whether the 
+   * session has expired and also whether the server requires login. 
+   * @returns True or false.
+   */
+  requireLogin = () => this.serverRequiresLogin ? this.#token == null : false;
 
+  /**
+   * Log in to the Ectobi server.
+   * @param {*} ev The event that triggered this call
+   * @param {*} username Username to log in with
+   * @param {*} password Password to log in with
+   */
   login = (ev, username, password) => {
 
     wretch()
@@ -52,7 +77,6 @@ class tokenManager {
       .then(response => {
         this.#token = response.result;
         this.main.tokenChanged('loggedIn');
-        console.log('token: ' + this.#token.token);
       })
       .catch(err => {
         console.log(err);
@@ -94,10 +118,24 @@ class ectobiMain {
       ipcMain.handle('getToken', () => this.tokenManager.getCurrentToken());
       ipcMain.handle('getConfirmation', (ev, opts) => this.confirm(opts));
 
-      if (this.tokenManager.requireLogin())
-        this.createLoginWindow();
-      else
-        this.createMainWindow();
+      wretch() 
+      .get(`http://${this.server}/api/ecto/server`)
+      .json()
+      .then(response => {
+
+        this.tokenManager.serverRequiresLogin = response.result.requiresLogin;
+
+        if (response.result.requiresLogin) {
+          if (this.tokenManager.requireLogin())
+            this.createLoginWindow();
+          else
+            this.createMainWindow();
+        } else {
+          this.createMainWindow();
+        }
+
+      })
+
 
     });
 
@@ -223,7 +261,15 @@ class ectobiMain {
       win.webContents.send('dialogConfiguration', opts);
     });
 
+    // This is a hack to fix the flicker you get with modal windows. 
+    // It doesn't actually work, but it seems to make things a little better
+    // This has been an issue since 2017 and still there's not actual fix.
+    // https://github.com/electron/electron/issues/10616
+    // https://github.com/electron/electron/issues/9325
+    win.on('close', e => this.mainWindow.setAlwaysOnTop(true));
+
     win.on('closed', x => {
+      this.mainWindow.setAlwaysOnTop(false);
       var idx = this.windows.findIndex(x => x == win);
       if (idx > -1) {
         this.windows.splice(idx, 1);

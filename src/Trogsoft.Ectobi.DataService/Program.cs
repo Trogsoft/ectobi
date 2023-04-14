@@ -3,23 +3,24 @@ using Hangfire.SqlServer;
 using Microsoft.AspNetCore.Authentication.JwtBearer;
 using Microsoft.AspNetCore.Identity;
 using Microsoft.EntityFrameworkCore;
-using Microsoft.EntityFrameworkCore.Internal;
 using Microsoft.IdentityModel.Tokens;
-using System.Runtime.CompilerServices;
 using System.Text;
 using Trogsoft.Ectobi.Common.Interfaces;
 using Trogsoft.Ectobi.Data;
 using Trogsoft.Ectobi.DataService.Interfaces;
 using Trogsoft.Ectobi.DataService.Services;
-using System.Linq;
-using System.Security.Cryptography.Xml;
 using Microsoft.AspNetCore.Authorization;
 using Trogsoft.Ectobi.Common;
+using Microsoft.EntityFrameworkCore.Sqlite;
+using System.Data;
+using Hangfire.LiteDB;
 
 namespace Trogsoft.Ectobi.DataService
 {
     public class Program
     {
+        private static string? dbType;
+        private static bool setupDb;
         private static bool setupMode;
         private static bool forceMode;
         private static bool noSecurityMode;
@@ -27,6 +28,13 @@ namespace Trogsoft.Ectobi.DataService
         public static void Main(string[] args)
         {
 
+            var dbSelector = args.ToList().FindIndex(x => x.Equals("--db", StringComparison.CurrentCultureIgnoreCase));
+            if (dbSelector > -1 && args.Count() > dbSelector)
+            {
+                dbType = args[dbSelector + 1];
+            }
+
+            setupDb = args.Contains("--setup-db", StringComparer.CurrentCultureIgnoreCase);
             setupMode = args.Contains("--setup-default", StringComparer.CurrentCultureIgnoreCase);
             forceMode = args.Contains("--force", StringComparer.CurrentCultureIgnoreCase);
             noSecurityMode = args.Contains("--no-security", StringComparer.CurrentCultureIgnoreCase);
@@ -49,8 +57,23 @@ namespace Trogsoft.Ectobi.DataService
 
             builder.Services.AddDbContext<EctoDb>(db =>
             {
-                var connectionString = builder.Configuration.GetConnectionString("db");
-                db.UseSqlServer(connectionString);
+                if (dbType != null)
+                {
+                    var cs = builder.Configuration.GetConnectionString("db");
+                    if (dbType.Equals("local", StringComparison.CurrentCultureIgnoreCase))
+                    {
+                        var path = Path.Combine(Environment.GetFolderPath(Environment.SpecialFolder.ApplicationData), "Ectobi", "Database");
+                        Directory.CreateDirectory(path);
+
+                        cs = $"Data Source={Path.Combine(path, "ecto.db")}";
+                        db.UseSqlite(cs);
+                    }
+                }
+                else
+                {
+                    var connectionString = builder.Configuration.GetConnectionString("db");
+                    db.UseSqlServer(connectionString);
+                }
             });
 
             // For Identity
@@ -106,6 +129,7 @@ namespace Trogsoft.Ectobi.DataService
             builder.Services.AddTransient<IEctoServer, EctoServer>();
             builder.Services.AddTransient<IRandomStringService, RandomStringService>();
             builder.Services.AddTransient<IDataService, Services.DataService>();
+            builder.Services.AddTransient<IModelService, ModelService>();
 
             builder.Services.AddControllers();
             builder.Services.AddSignalR();
@@ -120,27 +144,48 @@ namespace Trogsoft.Ectobi.DataService
 
             var populators = DiscoverModules<IPopulator>(builder.Services);
             var fileHandlers = DiscoverModules<IFileHandler>(builder.Services);
+            var models = DiscoverModules<IEctoModel>(builder.Services);
 
             builder.Services.AddHttpClient("webhook");
 
-            builder.Services.Configure<ModuleOptions>(opt => opt.Populators.AddRange(populators));
-            builder.Services.Configure<ModuleOptions>(opt => opt.FileImporters.AddRange(fileHandlers));
+            builder.Services.Configure<ModuleOptions>(opt =>
+            {
+                opt.Populators.AddRange(populators);
+                opt.FileImporters.AddRange(fileHandlers);
+                opt.Models.AddRange(models);
+            });
             builder.Services.AddSingleton<ModuleManager>();
 
             if (!setupMode)
             {
-                builder.Services.AddHangfire(configuration => configuration
-                    .SetDataCompatibilityLevel(CompatibilityLevel.Version_170)
-                    .UseSimpleAssemblyNameTypeSerializer()
-                    .UseRecommendedSerializerSettings()
-                    .UseSqlServerStorage(builder.Configuration.GetConnectionString("hangfire"), new SqlServerStorageOptions
+                builder.Services.AddHangfire(configuration =>
+                {
+                    configuration.SetDataCompatibilityLevel(CompatibilityLevel.Version_170);
+                    configuration.UseSimpleAssemblyNameTypeSerializer();
+                    configuration.UseRecommendedSerializerSettings();
+                    if (dbType != null && dbType.Equals("local", StringComparison.CurrentCultureIgnoreCase))
                     {
-                        CommandBatchMaxTimeout = TimeSpan.FromMinutes(5),
-                        SlidingInvisibilityTimeout = TimeSpan.FromMinutes(5),
-                        QueuePollInterval = TimeSpan.Zero,
-                        UseRecommendedIsolationLevel = true,
-                        DisableGlobalLocks = true
-                    }));
+                        var path = Path.Combine(Environment.GetFolderPath(Environment.SpecialFolder.ApplicationData), "Ectobi", "Database");
+                        Directory.CreateDirectory(path);
+                        var cs = Path.Combine(path, "ecto-hangfire.db");
+
+                        configuration.UseLiteDbStorage(cs, new LiteDbStorageOptions
+                        {
+                            QueuePollInterval = TimeSpan.FromSeconds(5)
+                        });
+                    }
+                    else
+                    {
+                        configuration.UseSqlServerStorage(builder.Configuration.GetConnectionString("hangfire"), new SqlServerStorageOptions
+                        {
+                            CommandBatchMaxTimeout = TimeSpan.FromMinutes(5),
+                            SlidingInvisibilityTimeout = TimeSpan.FromMinutes(5),
+                            QueuePollInterval = TimeSpan.Zero,
+                            UseRecommendedIsolationLevel = true,
+                            DisableGlobalLocks = true
+                        });
+                    }
+                });
 
                 builder.Services.AddHangfireServer();
             }
@@ -157,6 +202,15 @@ namespace Trogsoft.Ectobi.DataService
             });
 
             var app = builder.Build();
+
+            if (setupDb)
+            {
+                using (var scope = app.Services.CreateScope())
+                {
+                    var db = scope.ServiceProvider.GetService<EctoDb>();
+                    db.Database.EnsureCreated();
+                }
+            }
 
             if (setupMode)
                 SetupDefault(app);

@@ -23,6 +23,16 @@ const fieldType = {
         return name;
     }
 };
+
+const ectoModelPropertyFlags = {
+    None: 0,
+    PersonallyIdentifiableInformation: 1,
+    GeographicIdentifier: 2,
+    EmailAddress: 4,
+    PhoneNumber: 8,
+    SuggestedDefault: 16
+};
+
 const webHookEventType = {
     1: { textId: 'SchemaCreated', name: 'Schema Created' },
     2: { textId: 'SchemaUpdated', name: 'Schema Updated' },
@@ -52,4 +62,4 @@ const webHookEventType = {
     }
 }
 
-export { fieldFlags, fieldType, webHookEventType }
+export { fieldFlags, fieldType, webHookEventType, ectoModelPropertyFlags }

@@ -10,6 +10,7 @@
         public SchemaFieldFlags Flags { get; set; }
         public string? Populator { get; set; }
         public string? LookupTid { get; set; }
+        public string? ModelTid { get; set; }
     }
 
     public class SchemaFieldEditModel : SchemaFieldModel

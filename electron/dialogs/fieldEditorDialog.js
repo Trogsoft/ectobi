@@ -17,14 +17,14 @@ export class fieldEditorDialog extends dialogBase {
     constructor(sender, arg, token) {
         super(sender, arg, token);
 
-        this.client.populator.list().then(pl=>{
+        this.client.populator.list().then(pl => {
             this.populators = pl.result;
             return;
-        }).then(()=>{
-            return this.client.lookup.list().then(x=>{
+        }).then(() => {
+            return this.client.lookup.list().then(x => {
                 this.lookups = x.result;
             })
-        }).then(()=>{
+        }).then(() => {
             if (arg.field) {
                 this.client.field.getLatest(arg.schema, arg.field).then(x => {
                     this.model = x.result;
@@ -33,15 +33,15 @@ export class fieldEditorDialog extends dialogBase {
                 });
             } else {
                 this.setTitle('New Field');
-                this.render();                
-            }        
+                this.render();
+            }
         });
 
     }
 
     save = (e) => {
         if (this.model.id == 0) {
-            this.client.field.create(this.args.schema, this.model).then(x=>{
+            this.client.field.create(this.args.schema, this.model).then(x => {
                 if (x.succeeded) {
                     this.close();
                 } else {
@@ -54,7 +54,7 @@ export class fieldEditorDialog extends dialogBase {
     bind() {
         super.bind();
 
-        document.querySelectorAll('.create-field').forEach(x=>{
+        document.querySelectorAll('.create-field').forEach(x => {
             x.removeEventListener('click', this.save);
             x.addEventListener('click', this.save);
         });
@@ -69,9 +69,11 @@ export class fieldEditorDialog extends dialogBase {
 
         let fieldTypes = () => {
             var html = '';
-            Object.keys(fieldType).forEach(x => {
-                var sel = this.model.type == fieldType[x] ? 'selected' : '';
-                html += `<option value="${fieldType[x]}" ${sel}>${x}</option>`;
+            Object.keys(fieldType).sort().forEach(x => {
+                if (typeof (fieldType[x]) !== 'function') {
+                    var sel = this.model.type == fieldType[x] ? 'selected' : '';
+                    html += `<option value="${fieldType[x]}" ${sel}>${x}</option>`;
+                }
             });
             return html;
         }
@@ -91,7 +93,7 @@ export class fieldEditorDialog extends dialogBase {
                 html += `<div class="form-field"><label>Lookup Set</label>
                 <select class="form-control model-field" name="set"><option></option><option value="-1">(Create new Lookup Set)</option>
                 `;
-                this.lookups.forEach(l=>{
+                this.lookups.forEach(l => {
                     html += `<option value="${l.textId}" ${this.model.lookupTid == l.textId ? 'selected' : ''}>${l.name}</option>`;
                 })
                 html += '</select></div>';

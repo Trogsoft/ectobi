@@ -8,7 +8,6 @@ namespace Trogsoft.Ectobi.DataService.Populators
     {
         public string GetString()
         {
-            //var count = values.GetValue<int>("length", 32);
             return Convert.ToBase64String(RandomNumberGenerator.GetBytes(32));
         }
     }

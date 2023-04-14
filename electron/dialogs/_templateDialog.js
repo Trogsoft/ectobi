@@ -4,16 +4,14 @@ import { dialogBase } from "./dialogBase.js";
 
 export class templateDialog extends dialogBase {
 
-    client = ectoClient;
-
     model = {
         id: 0,
         name: null,
         description: null
     };
 
-    constructor(sender, arg) {
-        super(sender, arg);
+    constructor(sender, arg, token) {
+        super(sender, arg, token);
         if (arg.id > 0) {
             // this.client.webhook.get(arg.id).then(x => {
             //     this.model = x.result;

@@ -13,7 +13,7 @@ namespace Trogsoft.Ectobi.DataService.Controllers
         private readonly IEctoServer server;
 
         public EctobiController(ModuleManager mm, IWebHookManagementService whm, IEctoServer server)
-        {
+        {   
             this.mm = mm;
             this.whm = whm;
             this.server = server;

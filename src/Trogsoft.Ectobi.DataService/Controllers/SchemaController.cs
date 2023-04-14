@@ -27,6 +27,9 @@ namespace Trogsoft.Ectobi.DataService.Controllers
         [HttpGet("{textId}"), Authorize(Roles = "Administrator,SchemaManager")]
         public async Task<IActionResult> GetSchema(string textId) => SuccessResponse(await schema.GetSchema(textId));
 
+        [HttpPost("empty"), Authorize(Roles = "Administrator,SchemaManager")]
+        public async Task<IActionResult> CreateEmptySchema([FromBody] SchemaEditModel model) => SuccessResponse(await schema.CreateSchema(model)); 
+
         // Versions
 
         [HttpGet("{schemaTid}/versions"), Authorize(Roles = "Administrator,SchemaManager")]
