@@ -16,24 +16,24 @@ namespace Trogsoft.Ectobi.Data
         {
         }
 
-        public DbSet<Schema> Schemas { get; set; }
-        public DbSet<SchemaField> SchemaFields { get; set; }
-        public DbSet<Batch> Batches { get; set; }
-        public DbSet<Record> Records { get; set; }
-        public DbSet<Value> Values { get; set; }
-        public DbSet<Process> Processes { get; set; }
-        public DbSet<ProcessElement> ProcessElements { get; set; }
-        public DbSet<Populator> Populators { get; set; }
-        public DbSet<SchemaVersion> SchemaVersions { get; set; }
-        public DbSet<SchemaFieldVersion> SchemaFieldVersions { get; set; }
-        public DbSet<LookupSet> LookupSets { get; set; }
-        public DbSet<LookupSetValue> LookupSetValues { get; set; }
-        public DbSet<Period> Periods { get; set; }
-        public DbSet<Stage> Stages { get; set; }
-        public DbSet<WebHookEvent> WebHookEvents { get; set; }
-        public DbSet<WebHook> WebHooks {  get; set; }
-        public DbSet<UserRefreshToken> RefreshTokens { get; set; } 
-        public DbSet<Model> Models { get; set; }
+        public virtual DbSet<Schema> Schemas { get; set; }
+        public virtual DbSet<SchemaField> SchemaFields { get; set; }
+        public virtual DbSet<Batch> Batches { get; set; }
+        public virtual DbSet<Record> Records { get; set; }
+        public virtual DbSet<Value> Values { get; set; }
+        public virtual DbSet<Process> Processes { get; set; }
+        public virtual DbSet<ProcessElement> ProcessElements { get; set; }
+        public virtual DbSet<Populator> Populators { get; set; }
+        public virtual DbSet<SchemaVersion> SchemaVersions { get; set; }
+        public virtual DbSet<SchemaFieldVersion> SchemaFieldVersions { get; set; }
+        public virtual DbSet<LookupSet> LookupSets { get; set; }
+        public virtual DbSet<LookupSetValue> LookupSetValues { get; set; }
+        public virtual DbSet<Period> Periods { get; set; }
+        public virtual DbSet<Stage> Stages { get; set; }
+        public virtual DbSet<WebHookEvent> WebHookEvents { get; set; }
+        public virtual DbSet<WebHook> WebHooks {  get; set; }
+        public virtual DbSet<UserRefreshToken> RefreshTokens { get; set; } 
+        public virtual DbSet<Model> Models { get; set; }
 
         public string GetTextId<TEntity>(string title, Func<TEntity, bool> qualifier = null!) where TEntity : NamedEntity
         {
@@ -55,6 +55,7 @@ namespace Trogsoft.Ectobi.Data
 
         protected override void OnModelCreating(ModelBuilder modelBuilder)
         {
+
             base.OnModelCreating(modelBuilder);
 
             modelBuilder.Entity<Schema>(s =>

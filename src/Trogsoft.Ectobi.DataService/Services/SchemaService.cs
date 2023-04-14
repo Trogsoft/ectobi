@@ -63,7 +63,7 @@ namespace Trogsoft.Ectobi.DataService.Services
             }
 
             // Check if we need to use the file or if it's been done for us
-            if (model.File != null)
+            if (model.File != null && model.File.Filename != null && model.File.Data != null)
             {
                 var sfemResult = await fts.GetSchemaFieldEditModelCollection(model.File);
                 if (sfemResult.Succeeded && sfemResult.Result != null)
