@@ -7,6 +7,7 @@ using System.Text;
 
 namespace Trogsoft.Ectobi.Common
 {
+    [EctoModel("Person")]
     public class PersonModel
     {
         [DisplayName("First Name"), ModelFlags(EctoModelPropertyFlags.PersonallyIdentifiableInformation | EctoModelPropertyFlags.SuggestedDefault)]
@@ -18,7 +19,7 @@ namespace Trogsoft.Ectobi.Common
         [DisplayName("Gender"), ModelFlags(EctoModelPropertyFlags.PersonallyIdentifiableInformation)]
         public string? Gender { get; set; }
 
-        [DisplayName("Honorific"), ModelFlags(EctoModelPropertyFlags.PersonallyIdentifiableInformation)]
+        [DisplayName("Honorific"), ModelFlags(EctoModelPropertyFlags.PersonallyIdentifiableInformation), Description("eg, Mr, Mrs, etc.")]
         public string? Honorific { get; set; }
 
         [DisplayName("Date of Birth"), ModelFlags(EctoModelPropertyFlags.PersonallyIdentifiableInformation)]

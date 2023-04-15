@@ -7,17 +7,22 @@ export class modelEditorDialog extends dialogBase {
     models = [];
     selectedModel = -1;
 
-    model = {
-        id: 0,
-        name: null,
-        description: null
-    };
+    model;
 
     constructor(sender, arg, token) {
         super(sender, arg, token);
         this.client.model.list().then(x => {
+
             this.models = x.result;
             this.selectedModel = 0;
+
+            var defaultProperties = this.models[this.selectedModel].properties.filter(x=>(x.flags & ectoModelPropertyFlags.SuggestedDefault) > 0).map(x=>x.textId);
+
+            this.model = {
+                schemaTid: this.args.schema,
+                modelTid: this.models[this.selectedModel].textId,
+                properties: defaultProperties
+            }
 
             this.setTitle('New Model');
             this.render();
@@ -31,10 +36,32 @@ export class modelEditorDialog extends dialogBase {
 
     }
 
-    selectMode = (e) => {
+    selectModel= (e) => {
         var idx = parseInt(e.currentTarget.value);
         this.selectedModel = idx;
+        this.model.modelTid = this.mdoels[idx].textId;
         this.render();
+    }
+
+    fieldCheck = (e) => {
+        var propName = e.currentTarget.getAttribute('name');
+        var propIdx = this.model.properties.indexOf(propName);
+        if (propIdx > -1) {
+            this.model.properties.splice(propIdx, 1);
+        } else {
+            this.model.properties.push(propName);
+        }
+        this.render();
+    }
+
+    configureModel = (e) => {
+
+        this.client.model.configure(this.model).then(x=>{
+            window.ipc.closeMe();
+        }).catch(err=>{
+
+        })
+
     }
 
     bind() {
@@ -42,6 +69,14 @@ export class modelEditorDialog extends dialogBase {
         document.querySelectorAll('select').forEach(s=>{
             s.removeEventListener('change', this.selectModel);
             s.addEventListener('change', this.selectModel);
+        })
+        document.querySelectorAll('.model-field').forEach(x=>{
+            x.removeEventListener('click', this.fieldCheck);
+            x.addEventListener('click', this.fieldCheck);
+        })
+        document.querySelectorAll('.configure-model').forEach(x=>{
+            x.removeEventListener('click', this.configreModel);
+            x.addEventListener('click', this.configureModel);
         })
     }
 
@@ -65,9 +100,9 @@ export class modelEditorDialog extends dialogBase {
             var model = this.models[this.selectedModel];
             model.properties.forEach(prop=>{
                 var checked = '';
-                if ((prop.flags & ectoModelPropertyFlags.SuggestedDefault) > 0) checked = 'checked';
+                if (this.model.properties.indexOf(prop.textId) > -1) checked = 'checked';
                 html += '<div class="form-check">';
-                html += ` <input type="checkbox" id="cbmp-${prop.textId}" name="${prop.textId}" ${checked} /> <label for="cbmp-${prop.textId}">${prop.name}</label>`;
+                html += ` <input type="checkbox" class="model-field" id="cbmp-${prop.textId}" name="${prop.textId}" ${checked} /> <label for="cbmp-${prop.textId}">${prop.name} <small>${prop.description || ''}</small></label>`;
                 html += '</div>';
             });
 
@@ -87,7 +122,7 @@ export class modelEditorDialog extends dialogBase {
 
             <div class="dlg-button-row">
                 <button class="btn btn-danger close-dialog">Cancel</button>
-                <button class="btn btn-success create-schema ${this.readyToGo() ? '' : 'disabled'}">${this.model.id == 0 ? 'Create' : 'Save'}</button>
+                <button class="btn btn-success configure-model ${this.readyToGo() ? '' : 'disabled'}">${this.model.id == 0 ? 'Create' : 'Save'}</button>
             </div>
 
         `;

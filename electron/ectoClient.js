@@ -3,7 +3,7 @@ export class ectoClient {
     host = 'localhost:7247';
     headers = {};
     token;
-    
+
     constructor(token) {
         this.updateToken(token);
     }
@@ -11,7 +11,8 @@ export class ectoClient {
     getServerInfo = () => this.get('api/ecto/server');
 
     model = {
-        list: () => this.get('api/model')
+        list: () => this.get('api/model'),
+        configure: (model) => this.postJson('api/model/config', model)
     }
 
     data = {
@@ -65,7 +66,7 @@ export class ectoClient {
         get: (id) => this.get(`api/ecto/webhook/${id}`)
     }
 
-    updateToken = (token) =>{
+    updateToken = (token) => {
         this.token = token;
         this.headers = {
             'Authorization': 'Bearer ' + token

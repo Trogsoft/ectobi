@@ -74,7 +74,7 @@ export class ectoTabComponent extends ectoCoreComponent {
     getIdCode = () => Math.random().toString();
 
     openDialog(dlg, args) {
-        window.ipc.openDialog(Object.assign({
+        window.ipc.openDialog(Object.assign({}, {
             dialogType: dlg,
             width: 500,
             height: 500

@@ -47,14 +47,16 @@ namespace Trogsoft.Ectobi.DataService.Services
                 var models = 0;
                 foreach (var type in options.Models)
                 {
-                    if (!typeof(IEctoModel).IsAssignableFrom(type)) continue;
+                    var modelAttr = type.GetCustomAttribute<EctoModelAttribute>();
+                    if (modelAttr == null) continue;
                     if (db.Models.Any(x => x.TextId == type.Name)) continue;
 
                     var newModel = new Model
                     {
-                        Name = type.Name,
+                        Name = modelAttr.Title,
                         TextId = type.Name,
-                        Handler = type.FullName
+                        Handler = type.FullName,
+                        Description = modelAttr.Description
                     };
 
                     var ma = type.GetCustomAttribute<EctoModelAttribute>();
@@ -141,6 +143,8 @@ namespace Trogsoft.Ectobi.DataService.Services
             }
         }
 
+        public List<Type> GetModelTypes() => this.options.Models;
+
         public IFileHandler? GetFileHandlerForFileExtension(string ext)
         {
 
@@ -200,75 +204,75 @@ namespace Trogsoft.Ectobi.DataService.Services
 
         }
 
-        public Success<List<EctoModelDefinition>> GetModelDefinitions()
-        {
+        //public Success<List<EctoModelDefinition>> GetModelDefinitions()
+        //{
 
-            List<EctoModelDefinition> models = new List<EctoModelDefinition>();
-            using (var scope = issf.CreateScope())
-            {
-                foreach (var model in options.Models)
-                {
-                    var modelDef = new EctoModelDefinition()
-                    {
-                        TextId = model.Name
-                    };
+        //    List<EctoModelDefinition> models = new List<EctoModelDefinition>();
+        //    using (var scope = issf.CreateScope())
+        //    {
+        //        foreach (var model in options.Models)
+        //        {
+        //            var modelDef = new EctoModelDefinition()
+        //            {
+        //                TextId = model.Name
+        //            };
 
-                    var ma = model.GetCustomAttribute<EctoModelAttribute>();
-                    if (ma != null)
-                    {
-                        modelDef.Name = ma.Title;
-                        modelDef.Description = ma.Description;
-                    }
-                    else
-                    {
-                        modelDef.Name = model.Name;
-                    }
+        //            var ma = model.GetCustomAttribute<EctoModelAttribute>();
+        //            if (ma != null)
+        //            {
+        //                modelDef.Name = ma.Title;
+        //                modelDef.Description = ma.Description;
+        //            }
+        //            else
+        //            {
+        //                modelDef.Name = model.Name;
+        //            }
 
-                    var modelInstance = (IEctoModel)scope.ServiceProvider.GetRequiredService(model);
-                    var props = modelInstance.GetProperties().Result;
-                    if (props.Succeeded && props.Result != null)
-                        modelDef.Properties = props.Result;
+        //            var modelInstance = (IEctoModel)scope.ServiceProvider.GetRequiredService(model);
+        //            var props = modelInstance.GetProperties().Result;
+        //            if (props.Succeeded && props.Result != null)
+        //                modelDef.Properties = props.Result;
 
-                    models.Add(modelDef);
-                }
-            }
+        //            models.Add(modelDef);
+        //        }
+        //    }
 
-            return new Success<List<EctoModelDefinition>>(models);
+        //    return new Success<List<EctoModelDefinition>>(models);
 
-        }
+        //}
 
-        public Success<EctoModelDefinition> GetModelDefinition(string modelTid)
-        {
-            using (var scope = issf.CreateScope())
-            {
+        //public Success<EctoModelDefinition> GetModelDefinition(string modelTid)
+        //{
+        //    using (var scope = issf.CreateScope())
+        //    {
 
-                var model = options.Models.SingleOrDefault(x => x.Name == modelTid);
-                if (model == null) return Success<EctoModelDefinition>.Error("Model not found.", ErrorCodes.ERR_NOT_FOUND);
+        //        var model = options.Models.SingleOrDefault(x => x.Name == modelTid);
+        //        if (model == null) return Success<EctoModelDefinition>.Error("Model not found.", ErrorCodes.ERR_NOT_FOUND);
 
-                var modelDef = new EctoModelDefinition()
-                {
-                    TextId = model.Name
-                };
+        //        var modelDef = new EctoModelDefinition()
+        //        {
+        //            TextId = model.Name
+        //        };
 
-                var ma = model.GetCustomAttribute<EctoModelAttribute>();
-                if (ma != null)
-                {
-                    modelDef.Name = ma.Title;
-                    modelDef.Description = ma.Description;
-                }
-                else
-                {
-                    modelDef.Name = model.Name;
-                }
+        //        var ma = model.GetCustomAttribute<EctoModelAttribute>();
+        //        if (ma != null)
+        //        {
+        //            modelDef.Name = ma.Title;
+        //            modelDef.Description = ma.Description;
+        //        }
+        //        else
+        //        {
+        //            modelDef.Name = model.Name;
+        //        }
 
-                var modelInstance = (IEctoModel)scope.ServiceProvider.GetRequiredService(model);
-                var props = modelInstance.GetProperties().Result;
-                if (props.Succeeded && props.Result != null)
-                    modelDef.Properties = props.Result;
+        //        var modelInstance = scope.ServiceProvider.GetRequiredService(model);
+        //        var props = modelInstance.GetProperties().Result;
+        //        if (props.Succeeded && props.Result != null)
+        //            modelDef.Properties = props.Result;
 
-                return new Success<EctoModelDefinition>(modelDef);
+        //        return new Success<EctoModelDefinition>(modelDef);
 
-            }
-        }
+        //    }
+        //}
     }
 }

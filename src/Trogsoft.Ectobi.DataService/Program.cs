@@ -14,6 +14,7 @@ using Trogsoft.Ectobi.Common;
 using Microsoft.EntityFrameworkCore.Sqlite;
 using System.Data;
 using Hangfire.LiteDB;
+using System.Reflection;
 
 namespace Trogsoft.Ectobi.DataService
 {
@@ -144,7 +145,7 @@ namespace Trogsoft.Ectobi.DataService
 
             var populators = DiscoverModules<IPopulator>(builder.Services);
             var fileHandlers = DiscoverModules<IFileHandler>(builder.Services);
-            var models = DiscoverModules<IEctoModel>(builder.Services);
+            var models = DiscoverModulesWithAttribute<EctoModelAttribute>(builder.Services);
 
             builder.Services.AddHttpClient("webhook");
 
@@ -244,6 +245,18 @@ namespace Trogsoft.Ectobi.DataService
             else
                 Console.WriteLine("Default setup has completed.");
 
+        }
+
+        private static List<Type> DiscoverModulesWithAttribute<T>(IServiceCollection services) where T: Attribute
+        {
+            List<Type> modules = new List<Type>();
+            foreach (var type in AppDomain.CurrentDomain.GetAssemblies()
+                .SelectMany(x => x.GetTypes().Where(y => y.IsPublic && !y.IsAbstract && !y.IsInterface && y.GetCustomAttribute<T>() != null)))
+            {
+                services.AddTransient(type);
+                modules.Add(type);
+            }
+            return modules;
         }
 
         private static void SetupDefault(WebApplication app)

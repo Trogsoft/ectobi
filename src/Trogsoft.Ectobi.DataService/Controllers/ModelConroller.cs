@@ -21,7 +21,7 @@ namespace Trogsoft.Ectobi.DataService.Controllers
             => SuccessResponse(await ms.GetModelDefinitions());
 
         [HttpPost("config")]
-        public async Task<IActionResult> ConfigureModel(ModelConfigurationModel model)
+        public async Task<IActionResult> ConfigureModel([FromBody] ModelConfigurationModel model)
             => SuccessResponse(await ms.ConfigureModel(model));
 
     }

@@ -166,6 +166,17 @@ namespace Trogsoft.Ectobi.DataService.Services
                 if (!string.IsNullOrWhiteSpace(model.Populator) && mm.PopulatorExists(model.Populator))
                     fieldVersion.PopulatorId = mm.GetPopulatorDatabaseId(model.Populator);
 
+                if (!string.IsNullOrWhiteSpace(model.ModelTid))
+                {
+                    var dbModel = await db.Models.SingleOrDefaultAsync(x => x.TextId == model.ModelTid);
+                    if (dbModel != null)
+                    {
+                        fieldVersion.ModelId = dbModel.Id;
+                        fieldVersion.ModelField = model.ModelField;
+                    } 
+                    // todo: what to do if the model doesn't exist?
+                }
+
                 latestVersion.Fields.Add(fieldVersion);
             }
 
@@ -173,8 +184,6 @@ namespace Trogsoft.Ectobi.DataService.Services
             try
             {
                 await db.SaveChangesAsync();
-
-
                 await iwh.Dispatch(WebHookEventType.FieldCreated, mapper.Map<SchemaFieldModel>(fieldVersion));
             }
             catch (Exception ex)

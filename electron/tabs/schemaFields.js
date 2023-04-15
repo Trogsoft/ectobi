@@ -156,7 +156,8 @@ export class schemaFields extends ectoTabComponent {
     newModel = e => {
         this.openDialog('modelEditorDialog', {
             height: 500,
-            width: 700
+            width: 700,
+            schema: this.data.path[0]
         });
     }
 
