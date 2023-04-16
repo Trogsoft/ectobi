@@ -62,7 +62,7 @@ namespace Trogsoft.Ectobi.DataService.Validation
         ICanValidate<T>
     {
 
-        private readonly EctoDb db;
+        private readonly EctoDb? db;
 
         private T? Model;
 
@@ -178,105 +178,5 @@ namespace Trogsoft.Ectobi.DataService.Validation
         }
 
     }
-
-    //public class EctoModelValidator<T>
-    //{
-    //    public EctoModelValidator(EctoDb db)
-    //    {
-    //        this.db = db;
-    //    }
-
-    //    public EctoModelValidator<T> WithModel(T? model)
-    //    {
-    //        Model = model;
-    //        if (Model == null) recordFail(ErrorCodes.ERR_ARGUMENT_NULL, "Model cannot be null.");
-    //        return this;
-    //    }
-
-    //    public bool Failed { get; private set; } = false;
-
-    //    public T? Model { get; private set; }
-
-    //    private readonly EctoDb db;
-
-    //    private List<(int errorCode, string? message)> results = new();
-
-    //    private EctoModelValidator<T> recordFail(int ErrorCode, string? Message = null)
-    //    {
-    //        results.Add((ErrorCode, Message));
-    //        Failed = true;
-    //        return this;
-    //    }
-
-    //    private bool hasFailed() => Model == null || Failed;
-
-    //    public EctoModelValidator<T> Property<TProperty>(Func<T, TProperty> value, Action<EctoPropertyValidator> validation)
-    //    {
-    //        return this;
-    //    }
-
-    //    public EctoModelValidator<T> PropertyCannotBeNull<TResult>(Func<T, TResult> value)
-    //    {
-    //        if (hasFailed()) return this;
-
-    //        var result = value.Invoke(Model);
-    //        if (result == null) return recordFail(ErrorCodes.ERR_ARGUMENT_NULL, "Property cannot be null.");
-
-    //        return this;
-    //    }
-
-    //    private EctoModelValidator<T> databaseEntityMustExist<TEntity>(string selectorValue) where TEntity : NamedEntity
-    //    {
-    //        if (!hasFailed()) return this;
-
-    //        if (!db.Set<TEntity>().Any(x => x.TextId == selectorValue))
-    //            return recordFail(ErrorCodes.ERR_NOT_FOUND, $"{typeof(TEntity).Name} {selectorValue} not found.");
-
-    //        return this;
-    //    }
-
-    //    private EctoModelValidator<T> databaseEntityMustExist<TEntity>(Func<T, string?> selector) where TEntity : NamedEntity
-    //    {
-    //        if (!hasFailed()) return this;
-
-    //        var selectorValue = selector.Invoke(Model);
-    //        if (selectorValue == null)
-    //            return recordFail(ErrorCodes.ERR_ARGUMENT_NULL, $"{typeof(TEntity).Name} selector cannot be null.");
-
-    //        return databaseEntityMustExist<TEntity>(selectorValue);
-    //    }
-
-    //    public bool Validate() => !hasFailed();
-    //    public Success<TResult> GetReturnValue<TResult>()
-    //    {
-    //        if (hasFailed())
-    //            return new Success<TResult>(results.First().errorCode, results.First().message);
-
-    //        return new Success<TResult>(true);
-    //    }
-
-    //    public EctoModelValidator<T> ValueCannotBeNull(object? value, string? name = null)
-    //    {
-    //        if (hasFailed()) return this;
-
-    //        if (value == null)
-    //            return recordFail(ErrorCodes.ERR_ARGUMENT_NULL, $"{name ?? "Value"} cannot be null.");
-
-    //        return this;
-    //    }
-
-    //    public EctoModelValidator<T> EntityMustExist<TEntity>(Func<T, string?> value) where TEntity : NamedEntity
-    //        => databaseEntityMustExist<TEntity>(value);
-    //}
-
-    //public class EctoPropertyValidator
-    //{
-    //    public EctoPropertyValidator() { }
-
-    //    public void NotNullOrWhiteSpace()
-    //    {
-
-    //    }
-    //}
 
 }
