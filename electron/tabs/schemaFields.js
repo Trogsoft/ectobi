@@ -94,6 +94,7 @@ export class schemaFields extends ectoTabComponent {
 
     idCode;
     table;
+    models = [];
 
     constructor(ecto, target, data) {
         super(ecto, target, data);
@@ -120,6 +121,16 @@ export class schemaFields extends ectoTabComponent {
                                 items.push(fieldFlags[flag]);
                         });
                         return items.join(', ');
+                    }
+                },
+                modelName: {
+                    label: 'Model',
+                    format: x=>{
+                        var modelFilter = this.models.filter(y=>y.textId == x);
+                        if (modelFilter.length > 0) {
+                            return modelFilter[0].name;
+                        } 
+                        return x;
                     }
                 }
             }
@@ -163,10 +174,14 @@ export class schemaFields extends ectoTabComponent {
 
     init(soft = false) {
         if (!soft) {
-            this.client.field.list(this.data.path[0]).then(x => {
-                this.table.setData(x.result);
-                this.render();
-            });
+            this.client.model.list().then(x=>{
+                this.models = x.result;
+            }).then(x=>{
+                this.client.field.listBySchemaVersion(this.data.path[0], '0').then(x => {
+                    this.table.setData(x.result);
+                    this.render();
+                });    
+            })
         }
 
         this.ecto.toolbar.add(this.idCode,

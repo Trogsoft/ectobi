@@ -5,6 +5,7 @@ using System.Reflection;
 using Trogsoft.Ectobi.Common;
 using Trogsoft.Ectobi.Common.Interfaces;
 using Trogsoft.Ectobi.Data;
+using Trogsoft.Ectobi.DataService.Validation;
 
 namespace Trogsoft.Ectobi.DataService.Services
 {
@@ -28,7 +29,7 @@ namespace Trogsoft.Ectobi.DataService.Services
             foreach (var type in mm.GetModelTypes())
             {
                 var model = getModelDefinitionFromType(type);
-                if (model.Succeeded)
+                if (model.Succeeded && model.Result != null)
                     models.Add(model.Result);
             }
 
@@ -63,6 +64,7 @@ namespace Trogsoft.Ectobi.DataService.Services
                 var ep = new EctoModelProperty
                 {
                     Name = prop.Name,
+                    TextId = prop.Name
                 };
 
                 var ptype = SchemaFieldType.Text;
@@ -73,6 +75,8 @@ namespace Trogsoft.Ectobi.DataService.Services
                 if (prop.PropertyType == typeof(decimal) | prop.PropertyType == typeof(decimal?)) ptype = SchemaFieldType.Decimal;
                 if (prop.PropertyType == typeof(double) | prop.PropertyType == typeof(double?)) ptype = SchemaFieldType.Decimal;
                 if (prop.PropertyType == typeof(float) | prop.PropertyType == typeof(float?)) ptype = SchemaFieldType.Decimal;
+
+                ep.Type = ptype;
 
                 var displayNameAttr = prop.GetCustomAttribute<DisplayNameAttribute>();
                 if (displayNameAttr != null)
@@ -96,21 +100,32 @@ namespace Trogsoft.Ectobi.DataService.Services
         public async Task<Success<List<SchemaFieldModel>>> ConfigureModel(ModelConfigurationModel model)
         {
 
-            if (model == null) return Success<List<SchemaFieldModel>>.Error("Model is null.", ErrorCodes.ERR_ARGUMENT_NULL);
+            var validator = EctoModelValidator.CreateValidator<ModelConfigurationModel>(db)
+                .WithModel(model)
+                .Property(x => x.SchemaTid).NotNullOrWhiteSpace()
+                .Property(x => x.ModelName).NotNullOrWhiteSpace()
+                .Entity<Schema>(x => x.SchemaTid!).MustExist()
+                .Entity<Model>(x => x.ModelName!).MustExist();
 
-            if (string.IsNullOrWhiteSpace(model.SchemaTid))
-                return Success<List<SchemaFieldModel>>.Error("SchemaTid was not specified.", ErrorCodes.ERR_ARGUMENT_NULL);
+            if (!validator.Validate()) return validator.GetResult<List<SchemaFieldModel>>();
 
-            if (string.IsNullOrWhiteSpace(model.ModelTid))
-                return Success<List<SchemaFieldModel>>.Error("ModelTid was not specified.", ErrorCodes.ERR_ARGUMENT_NULL);
+            //if (!validator.Validate()) return validator.GetReturnValue<List<SchemaFieldModel>>();
 
-            var schema = await db.Schemas.SingleOrDefaultAsync(x => x.TextId == model.SchemaTid);
-            if (schema == null) return Success<List<SchemaFieldModel>>.Error("Schema not found.", ErrorCodes.ERR_NOT_FOUND);
+            //if (model == null) return Success<List<SchemaFieldModel>>.Error("Model is null.", ErrorCodes.ERR_ARGUMENT_NULL);
 
-            var dmodel = await db.Models.SingleOrDefaultAsync(x => x.TextId == model.ModelTid);
-            if (dmodel == null) return Success<List<SchemaFieldModel>>.Error("Model not found.", ErrorCodes.ERR_NOT_FOUND);
+            //if (string.IsNullOrWhiteSpace(model.SchemaTid))
+            //    return Success<List<SchemaFieldModel>>.Error("SchemaTid was not specified.", ErrorCodes.ERR_ARGUMENT_NULL);
 
-            var imodel = this.GetModelDefinition(model.ModelTid);
+            //if (string.IsNullOrWhiteSpace(model.ModelName))
+            //    return Success<List<SchemaFieldModel>>.Error("ModelTid was not specified.", ErrorCodes.ERR_ARGUMENT_NULL);
+
+            //var schema = await db.Schemas.SingleOrDefaultAsync(x => x.TextId == model.SchemaTid);
+            //if (schema == null) return Success<List<SchemaFieldModel>>.Error("Schema not found.", ErrorCodes.ERR_NOT_FOUND);
+
+            //var dmodel = await db.Models.SingleOrDefaultAsync(x => x.TextId == model.ModelName);
+            //if (dmodel == null) return Success<List<SchemaFieldModel>>.Error("Model not found.", ErrorCodes.ERR_NOT_FOUND);
+
+            var imodel = GetModelDefinition(model.ModelName);
             if (!imodel.Succeeded | imodel.Result == null)
                 return Success<List<SchemaFieldModel>>.Error(imodel.StatusMessage ?? "Model not found.", imodel.ErrorCode);
 
@@ -118,28 +133,22 @@ namespace Trogsoft.Ectobi.DataService.Services
 
             foreach (var field in fields)
             {
+
+                // If it already exists, that's fine and we can move to the next one.
                 var existingField = await db.SchemaFields.SingleOrDefaultAsync(x => x.Name == field.Name);
+                if (existingField != null) continue;
 
                 var sff = SchemaFieldFlags.None;
                 if (field.Flags.HasFlag(EctoModelPropertyFlags.PersonallyIdentifiableInformation)) sff |= SchemaFieldFlags.PersonallyIdentifiableInformation;
-
-                var type = SchemaFieldType.Text;
-                if (field.Type == typeof(int) || field.Type == typeof(int?)) type = SchemaFieldType.Integer;
-                if (field.Type == typeof(long) || field.Type == typeof(long?)) type = SchemaFieldType.Integer;
-                if (field.Type == typeof(bool) || field.Type == typeof(bool?)) type = SchemaFieldType.Boolean;
-                if (field.Type == typeof(DateTime) | field.Type == typeof(DateTime?)) type = SchemaFieldType.DateTime;
-                if (field.Type == typeof(decimal) | field.Type == typeof(decimal?)) type = SchemaFieldType.Decimal;
-                if (field.Type == typeof(double) | field.Type == typeof(double?)) type = SchemaFieldType.Decimal;
-                if (field.Type == typeof(float) | field.Type == typeof(float?)) type = SchemaFieldType.Decimal;
 
                 await fieldService.CreateField(model.SchemaTid, new SchemaFieldEditModel
                 {
                     Name = field.Name,
                     Description = field.Description,
-                    ModelTid = model.ModelTid,
+                    ModelName = model.ModelName,
                     ModelField = field.TextId,  // start here
                     Flags = sff,
-                    Type = type
+                    Type = field.Type
                 });
             }
 

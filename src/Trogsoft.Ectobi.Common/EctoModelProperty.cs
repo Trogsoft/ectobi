@@ -11,7 +11,7 @@ namespace Trogsoft.Ectobi.Common
         public string? Name { get; set; }
         public string? TextId { get; set; }
         public string? Description { get; set; }
-        public Type Type { get; set; }
+        public SchemaFieldType Type { get; set; }
         public EctoModelPropertyFlags Flags { get; set; }
     }
 }

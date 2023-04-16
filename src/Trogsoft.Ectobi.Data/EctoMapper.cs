@@ -52,6 +52,7 @@ namespace Trogsoft.Ectobi.Data
             cfg.CreateMap<SchemaFieldVersion, SchemaFieldModel>()
                 .ForMember(x => x.Populator, y => y.MapFrom(z => z.Populator != null ? z.Populator.TextId : null))
                 .ForMember(x => x.LookupTid, y => y.MapFrom(z => z.LookupSet != null ? z.LookupSet.TextId : null))
+                .ForMember(x => x.ModelName, y => y.MapFrom(z => z.Model != null ? z.Model.TextId : null))
                 .ReverseMap();
 
             cfg.CreateMap<SchemaField, SchemaFieldEditModel>()
@@ -60,7 +61,7 @@ namespace Trogsoft.Ectobi.Data
             cfg.CreateMap<SchemaFieldVersion, SchemaFieldEditModel>()
                 .ForMember(x => x.Populator, y => y.MapFrom(z => z.Populator != null ? z.Populator.TextId : null))
                 .ForMember(x => x.LookupTid, y => y.MapFrom(z => z.LookupSet != null ? z.LookupSet.TextId : null))
-                .ForMember(x => x.ModelTid, y => y.MapFrom(z => z.Model != null ? z.Model.TextId : null))
+                .ForMember(x => x.ModelName, y => y.MapFrom(z => z.Model != null ? z.Model.TextId : null))
                 .ReverseMap();
 
             cfg.CreateMap<SchemaFieldVersion, SchemaFieldVersion>()

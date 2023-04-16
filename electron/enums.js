@@ -2,8 +2,10 @@ const fieldFlags = {
     1: 'Allow Null',
     2: 'Numeric ID',
     4: 'Display Value',
-    8: 'Required At Import'
+    8: 'Required At Import',
+    16: 'Personally Identifiable Information'
 };
+
 const fieldType = {
     Text: 1,
     Integer: 2,

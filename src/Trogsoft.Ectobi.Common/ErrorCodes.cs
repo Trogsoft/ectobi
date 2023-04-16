@@ -21,5 +21,8 @@ namespace Trogsoft.Ectobi.Common
         public static readonly int ERR_FILE_NOT_LOADED = 0x000b;
         public static readonly int LOOKUP_SET_CREATION_FAILED = 0x000c;
         public static readonly int ERR_LOGIN_FAILED = 0x000d;
+        public static readonly int ERR_TYPE_MISMATCH = 0x000e;
+        public static readonly int ERR_VALUE_TOO_LONG = 0x000f;
+        public static readonly int ERR_VALUE_TOO_SHORT = 0x0010;
     }
 }

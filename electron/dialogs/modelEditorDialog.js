@@ -6,37 +6,46 @@ export class modelEditorDialog extends dialogBase {
 
     models = [];
     selectedModel = -1;
+    fields = [];
 
     model;
 
     constructor(sender, arg, token) {
         super(sender, arg, token);
-        this.client.model.list().then(x => {
+        this.client.field.listBySchemaVersion(arg.schema, '0').then(x => {
 
-            this.models = x.result;
-            this.selectedModel = 0;
+            this.fields = x.result;
 
-            var defaultProperties = this.models[this.selectedModel].properties.filter(x=>(x.flags & ectoModelPropertyFlags.SuggestedDefault) > 0).map(x=>x.textId);
+        }).then(x => {
+            this.client.model.list().then(x => {
 
-            this.model = {
-                schemaTid: this.args.schema,
-                modelTid: this.models[this.selectedModel].textId,
-                properties: defaultProperties
-            }
+                this.models = x.result;
+                this.selectedModel = 0;
 
-            this.setTitle('New Model');
-            this.render();
+                var defaultProperties = this.models[this.selectedModel].properties
+                    // This selects the current model's properties based on whether it's a suggested default or whether the current schema already contains it. 
+                    .filter(x => (x.flags & ectoModelPropertyFlags.SuggestedDefault) > 0 || this.fields.filter(y=>y.modelField == x.textId).length > 0)
+                    .map(x => x.textId);
 
-            if (arg.id > 0) {
+                this.model = {
+                    schemaTid: this.args.schema,
+                    modelName: this.models[this.selectedModel].textId,
+                    properties: defaultProperties
+                }
 
-            } else {
+                this.setTitle('New Model');
+                this.render();
 
-            }
+                if (arg.id > 0) {
+
+                } else {
+
+                }
+            });
         });
-
     }
 
-    selectModel= (e) => {
+    selectModel = (e) => {
         var idx = parseInt(e.currentTarget.value);
         this.selectedModel = idx;
         this.model.modelTid = this.mdoels[idx].textId;
@@ -56,9 +65,9 @@ export class modelEditorDialog extends dialogBase {
 
     configureModel = (e) => {
 
-        this.client.model.configure(this.model).then(x=>{
+        this.client.model.configure(this.model).then(x => {
             window.ipc.closeMe();
-        }).catch(err=>{
+        }).catch(err => {
 
         })
 
@@ -66,15 +75,15 @@ export class modelEditorDialog extends dialogBase {
 
     bind() {
         super.bind();
-        document.querySelectorAll('select').forEach(s=>{
+        document.querySelectorAll('select').forEach(s => {
             s.removeEventListener('change', this.selectModel);
             s.addEventListener('change', this.selectModel);
         })
-        document.querySelectorAll('.model-field').forEach(x=>{
+        document.querySelectorAll('.model-field').forEach(x => {
             x.removeEventListener('click', this.fieldCheck);
             x.addEventListener('click', this.fieldCheck);
         })
-        document.querySelectorAll('.configure-model').forEach(x=>{
+        document.querySelectorAll('.configure-model').forEach(x => {
             x.removeEventListener('click', this.configreModel);
             x.addEventListener('click', this.configureModel);
         })
@@ -88,7 +97,7 @@ export class modelEditorDialog extends dialogBase {
 
         var renderModels = () => {
             var html = '';
-            this.models.forEach((m,i)=>{
+            this.models.forEach((m, i) => {
                 html += `<option value="${i}">${m.name}</option>`;
             })
             return html;
@@ -98,11 +107,18 @@ export class modelEditorDialog extends dialogBase {
 
             var html = '';
             var model = this.models[this.selectedModel];
-            model.properties.forEach(prop=>{
+            model.properties.forEach(prop => {
+
+                // Checked if default, or part of the currently selected collection
                 var checked = '';
                 if (this.model.properties.indexOf(prop.textId) > -1) checked = 'checked';
+
+                // Disable if it's already part of the schema 
+                var dis = '';
+                if (this.fields.filter(x => x.modelName == model.textId && x.modelField == prop.textId).length > 0) { dis = 'disabled'; checked = 'checked' };
+
                 html += '<div class="form-check">';
-                html += ` <input type="checkbox" class="model-field" id="cbmp-${prop.textId}" name="${prop.textId}" ${checked} /> <label for="cbmp-${prop.textId}">${prop.name} <small>${prop.description || ''}</small></label>`;
+                html += ` <input type="checkbox" class="model-field" id="cbmp-${prop.textId}" name="${prop.textId}" ${checked} ${dis} /> <label for="cbmp-${prop.textId}">${prop.name} <small>${prop.description || ''}</small></label>`;
                 html += '</div>';
             });
 

@@ -4,6 +4,7 @@ using System.Net.Mail;
 using Trogsoft.Ectobi.Common;
 using Trogsoft.Ectobi.Common.Interfaces;
 using Trogsoft.Ectobi.Data;
+using Trogsoft.Ectobi.DataService.Validation;
 
 namespace Trogsoft.Ectobi.DataService.Services
 {
@@ -91,13 +92,20 @@ namespace Trogsoft.Ectobi.DataService.Services
 
         }
 
-        public async Task<Success<List<SchemaFieldModel>>> GetVersionFields(string schemaTid, int version)
+        public async Task<Success<List<SchemaFieldModel>>> GetVersionFields(string schemaTid, int version = 0)
         {
 
-            var schemaVersion = db.SchemaVersions.SingleOrDefault(x => x.Schema.TextId == schemaTid && x.Version == version);
+            SchemaVersion? schemaVersion;
+            if (version == 0) // The latest version
+                schemaVersion = db.SchemaVersions.Where(x => x.Schema.TextId == schemaTid).OrderByDescending(x => x.Version).FirstOrDefault();
+            else
+                schemaVersion = db.SchemaVersions.SingleOrDefault(x => x.Schema.TextId == schemaTid && x.Version == version);
+
             if (schemaVersion == null) return Success<List<SchemaFieldModel>>.Error("Schema version not found.", ErrorCodes.ERR_NOT_FOUND);
 
+            version = schemaVersion.Version;
             var fields = await db.SchemaFieldVersions
+                .Include(x=>x.Model)
                 .Where(x => x.SchemaVersion.Schema.TextId == schemaTid && x.SchemaVersion.Version == version)
                 .ToListAsync();
             var list = fields.Select(x => mapper.Map<SchemaFieldModel>(x)).ToList();
@@ -143,19 +151,21 @@ namespace Trogsoft.Ectobi.DataService.Services
         public async Task<Success<SchemaFieldModel>> CreateField(string schemaTid, SchemaFieldEditModel model)
         {
 
-            if (string.IsNullOrWhiteSpace(schemaTid)) return Success<SchemaFieldModel>.Error("SchemaTid cannot be null.", ErrorCodes.ERR_ARGUMENT_NULL);
-            if (model == null) return Success<SchemaFieldModel>.Error("Model cannot be null.", ErrorCodes.ERR_ARGUMENT_NULL);
-            if (string.IsNullOrWhiteSpace(model.Name)) return Success<SchemaFieldModel>.Error("Model.Name cannot be null.", ErrorCodes.ERR_ARGUMENT_NULL);
+            var validator = EctoModelValidator.CreateValidator<SchemaFieldEditModel>(db)
+                .WithModel(model)
+                .Property(x => x.Name).NotNullOrWhiteSpace()
+                .Property(x => x.ModelName).NotNullOrWhiteSpace()
+                .Entity<Schema>(x => schemaTid).MustExist();
 
-            var schema = db.Schemas.Include(x => x.SchemaFields).SingleOrDefault(x => x.TextId == schemaTid);
-            if (schema == null) return Success<SchemaFieldModel>.Error("Schema not found.", ErrorCodes.ERR_NOT_FOUND);
+            if (!validator.Validate()) return validator.GetResult<SchemaFieldModel>();
 
+            var schema = db.Schemas.Include(x => x.SchemaFields).SingleOrDefault(x => x.TextId == schemaTid)!;
             if (schema.SchemaFields.Any(x => x.Name == model.Name)) return Success<SchemaFieldModel>.Error("Field already exists.", ErrorCodes.ERR_FIELD_ALREADY_EXISTS);
 
             var newField = mapper.Map<SchemaField>(model);
             newField.TextId = db.GetTextId<SchemaField>($"{model.Name}");
 
-            var transaction = db.Database.BeginTransaction();
+            //var transaction = db.Database.BeginTransaction();
 
             var latestVersion = db.SchemaVersions.Where(x => x.SchemaId == schema.Id).OrderByDescending(x => x.Version).FirstOrDefault();
             var fieldVersion = mapper.Map<SchemaFieldVersion>(newField);
@@ -166,14 +176,14 @@ namespace Trogsoft.Ectobi.DataService.Services
                 if (!string.IsNullOrWhiteSpace(model.Populator) && mm.PopulatorExists(model.Populator))
                     fieldVersion.PopulatorId = mm.GetPopulatorDatabaseId(model.Populator);
 
-                if (!string.IsNullOrWhiteSpace(model.ModelTid))
+                if (!string.IsNullOrWhiteSpace(model.ModelName))
                 {
-                    var dbModel = await db.Models.SingleOrDefaultAsync(x => x.TextId == model.ModelTid);
+                    var dbModel = await db.Models.SingleOrDefaultAsync(x => x.TextId == model.ModelName);
                     if (dbModel != null)
                     {
                         fieldVersion.ModelId = dbModel.Id;
                         fieldVersion.ModelField = model.ModelField;
-                    } 
+                    }
                     // todo: what to do if the model doesn't exist?
                 }
 
@@ -184,15 +194,14 @@ namespace Trogsoft.Ectobi.DataService.Services
             try
             {
                 await db.SaveChangesAsync();
+                //transaction.Commit();
                 await iwh.Dispatch(WebHookEventType.FieldCreated, mapper.Map<SchemaFieldModel>(fieldVersion));
             }
             catch (Exception ex)
             {
-                transaction.Rollback();
+                //transaction.Rollback();
                 return Success<SchemaFieldModel>.Error(ex.Message, ErrorCodes.ERR_UNSPECIFIED_ERROR);
             }
-
-            transaction.Commit();
 
             bg.Enqueue<IFieldService>(x => x.PopulateField(newField.Id));
 
