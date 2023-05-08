@@ -26,13 +26,32 @@ namespace Trogsoft.Ectobi.Data
             cfg.CreateMap<SchemaVersion, SchemaVersionModel>()
                 .ReverseMap();
 
+            // This is used in ISchemaData when creating a schema
             cfg.CreateMap<SchemaEditModel, Schema>()
-                .ForMember(x => x.SchemaFields, y => y.MapFrom(z => z.Fields))
                 .ReverseMap();
+
+            // This is used in CreateSchema to create the first SchemaVersion
+            cfg.CreateMap<Schema, SchemaVersionEditModel>();
+
+            // This is used in CreateSchemaVersion to create the entity for insertion into the database.
+            cfg.CreateMap<SchemaVersionEditModel, SchemaVersion>();
+
+            cfg.CreateMap<SchemaFieldModel, SchemaFieldEditModel>();
 
             cfg.CreateMap<SchemaFieldModel, SchemaField>()
                 .Include<SchemaFieldEditModel, SchemaField>()
                 .ReverseMap();
+
+            #region FieldFilter Stuff
+
+            cfg.CreateMap<SchemaFieldVersion, FieldFilterModel>()
+                .ForMember(x => x.Options, y => y.MapFrom(z => z.LookupSet.Values.OrderBy(q => q.NumericValue)))
+                .ReverseMap();
+
+            cfg.CreateMap<LookupSetValue, FieldFilterOption>()
+                .ForMember(x => x.Id, y => y.MapFrom(z => z.NumericValue));
+
+            #endregion
 
             cfg.CreateMap<SchemaFieldModel, SchemaFieldVersion>()
                 .ForMember(x => x.Id, y => y.Ignore())
@@ -62,14 +81,20 @@ namespace Trogsoft.Ectobi.Data
                 .ForMember(x => x.Populator, y => y.MapFrom(z => z.Populator != null ? z.Populator.TextId : null))
                 .ForMember(x => x.LookupTid, y => y.MapFrom(z => z.LookupSet != null ? z.LookupSet.TextId : null))
                 .ForMember(x => x.ModelName, y => y.MapFrom(z => z.Model != null ? z.Model.TextId : null))
-                .ReverseMap();
+                .ReverseMap()
+                .ForMember(x => x.Populator, y => y.Ignore());
 
             cfg.CreateMap<SchemaFieldVersion, SchemaFieldVersion>()
                 .ForMember(x => x.Id, y => y.MapFrom(z => 0));
 
-            cfg.CreateMap<LookupSet, LookupSetModel>().ReverseMap();
+            cfg.CreateMap<LookupSet, LookupSetModel>().ReverseMap()
+                .ForMember(x => x.Values, y => y.MapFrom(z => z.Values.OrderBy(q => q.Name)))
+                .ReverseMap();
 
-            cfg.CreateMap<LookupSetValue, LookupSetValueModel>().ReverseMap();
+            cfg.CreateMap<LookupSetValue, LookupSetValueModel>()
+                .ForMember(x => x.Value, y => y.MapFrom(z => z.NumericValue))
+                .ReverseMap()
+                .ForMember(x => x.NumericValue, y => y.MapFrom(z => z.Value));
 
             cfg.CreateMap<SchemaFieldEditModel, SchemaField>()
                 .ReverseMap();

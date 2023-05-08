@@ -125,12 +125,12 @@ export class schemaFields extends ectoTabComponent {
                 },
                 modelName: {
                     label: 'Model',
-                    format: x=>{
-                        var modelFilter = this.models.filter(y=>y.textId == x);
+                    format: (x,r) => {
+                        var modelFilter = this.models.filter(y => y.textId == x);
                         if (modelFilter.length > 0) {
-                            return modelFilter[0].name;
-                        } 
-                        return x;
+                            return modelFilter[0].name + '.' + r.modelField;
+                        }
+                        return x || '';
                     }
                 }
             }
@@ -149,8 +149,7 @@ export class schemaFields extends ectoTabComponent {
         this.openDialog('fieldEditorDialog', {
             height: 700,
             width: 700,
-            schema: this.data.path[0],
-            field: null
+            schema: this.data.path[0]
         });
     }
 
@@ -160,7 +159,19 @@ export class schemaFields extends ectoTabComponent {
             height: 700,
             width: 700,
             schema: this.data.path[0],
-            field: item.textId
+            field: item.textId,
+        });
+    }
+
+    deleteField = e => {
+        var item = this.table.getState().selectedItem;
+        window.ipc.confirm({
+            message: 'Are you sure you want to delete this field?'
+        }).then(x => {
+            if (x.response == 1) return;
+            this.client.field.delete(this.data.path[0], item.textId).then(y => {
+                this.init(false);
+            });
         });
     }
 
@@ -174,13 +185,13 @@ export class schemaFields extends ectoTabComponent {
 
     init(soft = false) {
         if (!soft) {
-            this.client.model.list().then(x=>{
+            this.client.model.list().then(x => {
                 this.models = x.result;
-            }).then(x=>{
+            }).then(x => {
                 this.client.field.listBySchemaVersion(this.data.path[0], '0').then(x => {
                     this.table.setData(x.result);
                     this.render();
-                });    
+                });
             })
         }
 

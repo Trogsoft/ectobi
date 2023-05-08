@@ -1,6 +1,7 @@
 ﻿using AutoMapper.Internal.Mappers;
 using Microsoft.AspNetCore.Identity.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore;
+using System.Globalization;
 using System.Security.Cryptography.X509Certificates;
 using System.Text.RegularExpressions;
 
@@ -37,20 +38,19 @@ namespace Trogsoft.Ectobi.Data
 
         public string GetTextId<TEntity>(string title, Func<TEntity, bool> qualifier = null!) where TEntity : NamedEntity
         {
-            Regex rgx = new Regex("[^a-zA-Z0-9.-]");
+            Regex rgx = new Regex("[^a-zA-Z0-9.]");
             title = title.Trim();
-            title = title.Replace(" ", "-"); // Replace all spaces with hyphens
-            string tid = rgx.Replace(title, "-"); // Replace all non-alpha characters with hyphens
-            tid = Regex.Replace(tid, "-{2,}", "-"); // Replace multiple hypens with one
-            tid = tid.Trim('-'); // Remove any trailing hyphens
+            title = CultureInfo.CurrentCulture.TextInfo.ToTitleCase(title); // Make it title case so that all words are appropriately capitalised
+            title = title.Replace(" ", ""); // Replace all spaces with hyphens
+            string tid = rgx.Replace(title, ""); // Replace all non-alpha characters with hyphens
             int idx = 1; 
             // Check to see if the text ID exists. If it does, add a hyphen and an index number until it doesn't.
             while (Set<TEntity>().AsQueryable().Any(x => x.TextId == tid))
             {
-                tid = rgx.Replace(title, "") + $"-{idx}";
+                tid = rgx.Replace(title, "") + $"{idx}";
                 idx++;
             }
-            return tid.ToLower(); // Return it as all lowercase. We're assuming the database collation is case insensitive.
+            return System.Text.Json.JsonNamingPolicy.CamelCase.ConvertName(tid);
         }
 
         protected override void OnModelCreating(ModelBuilder modelBuilder)

@@ -8,6 +8,10 @@ namespace Trogsoft.Ectobi.Common.Interfaces
 {
     public interface IPopulator
     {
-        string GetString();
+        string GetString(Dictionary<string, string> options);
+        long GetInteger(Dictionary<string, string> options);
+        double GetDecimal(Dictionary<string, string> options);
+        IList<PopulatorOption> GetOptions();
+        PopulatorReturnType GetReturnType();
     }
 }

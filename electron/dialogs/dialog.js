@@ -18,21 +18,31 @@ var dialogInstance;
 
 window.addEventListener('DOMContentLoaded', x => {
 
+    var hash = window.location.hash.replace('#', '');
+    var dialogArgs = {};
+    hash.split('/').forEach(x => {
+        var parts = x.split('=');
+        dialogArgs[parts[0]] = parts[1];
+    });
+
+    window.ipc.getToken().then(token => {
+        if (dialogArgs.dialogType) {
+            var dt = dialogs[dialogArgs.dialogType];
+            if (dt) {
+                dialogInstance = new dt({}, dialogArgs, token);
+            } else {
+                window.ipc.alert({ message: `Dialog type not found: ${dt}` });
+            }
+        } else {
+            window.ipc.alert(`Dialog type not specified.`);
+        }
+    })
+
     window.ipc.dialogConfiguration((event, value) => {
-        window.ipc.getToken().then(token=>{
-            if (value.dialogType) {
-                var dt = dialogs[value.dialogType];
-                if (dt) {
-                    dialogInstance = new dt(event.sender, value, token);
-                } else {
-                    window.ipc.alert({ message: `Dialog type not found: ${dt}` });
-                }
-            }    
-        })
     });
 
     window.ipc.tokenRefresh((event) => {
-        window.ipc.getToken().then(token=>{
+        window.ipc.getToken().then(token => {
             dialogInstance.tokenUpdate(token);
         })
     });

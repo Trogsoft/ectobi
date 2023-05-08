@@ -42,7 +42,7 @@ export class ectoTree extends ectoCoreComponent {
             html += `<li>${link('schemaDetail/' + s.textId, 'ri-folder-fill', s.name, true)}<ul>
                 ${link('schemaData/' + s.textId, 'ri-database-2-fill', 'Data', true)}
                 <ul>
-                ${link('lookupManager', 'ri-table-2', 'Lookup Tables')}
+                ${link('lookupManager/' + s.textId, 'ri-table-2', 'Lookup Tables')}
                 </ul>
                 ${link('schemaUploads/' + s.textId, 'ri-upload-2-fill', 'Uploads')}
                 ${link('schemaVersions/' + s.textId, 'ri-grid-line', 'Versions')}

@@ -1,5 +1,6 @@
 ﻿using Microsoft.Extensions.Options;
 using Microsoft.OpenApi.Writers;
+using System.ComponentModel;
 using System.Reflection;
 using Trogsoft.Ectobi.Common;
 using Trogsoft.Ectobi.Common.Interfaces;
@@ -34,11 +35,20 @@ namespace Trogsoft.Ectobi.DataService.Services
                     if (!typeof(IPopulator).IsAssignableFrom(type)) continue;
                     if (db.Populators.Any(y => y.TextId == type.FullName)) continue;
 
+                    var name = type.Name;
+                    var attr = type.GetCustomAttribute<DisplayNameAttribute>();
+                    if (attr != null) name = attr.DisplayName;
+
+                    var rt = PopulatorReturnType.String;
+                    var rtAttr = type.GetCustomAttribute<PopulatorReturnTypeAttribute>();
+                    if (rtAttr != null) rt = rtAttr.Type;
+
                     populators++;
                     db.Populators.Add(new Populator
                     {
-                        Name = type.Name,
-                        TextId = type.FullName
+                        Name = name,
+                        TextId = type.Name,
+                        ReturnType = rt
                     });
                 }
 
@@ -93,7 +103,7 @@ namespace Trogsoft.Ectobi.DataService.Services
             {
                 var db = scope.ServiceProvider.GetService<EctoDb>();
                 if (db != null)
-                    return db.Populators.SingleOrDefault(x => x.Name == populator)?.Id;
+                    return db.Populators.SingleOrDefault(x => x.TextId == populator)?.Id;
             }
             return null;
         }
@@ -202,6 +212,20 @@ namespace Trogsoft.Ectobi.DataService.Services
 
             return new Success<List<PopulatorModel>>(pops);
 
+        }
+
+        public Success<IList<PopulatorOption>> GetPopulatorOptions(string populator)
+        {
+            using (var scope = issf.CreateScope())
+            {
+                var pop = options.Populators.SingleOrDefault(x => x.Name == populator);
+                if (pop == null) return new Success<IList<PopulatorOption>>();
+
+                var instance = (IPopulator)scope.ServiceProvider.GetRequiredService(pop);
+                var popOptions = instance.GetOptions();                
+
+                return new Success<IList<PopulatorOption>>(popOptions);
+            }
         }
 
         //public Success<List<EctoModelDefinition>> GetModelDefinitions()

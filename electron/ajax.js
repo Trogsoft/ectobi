@@ -79,6 +79,20 @@ const ajax = function (config) {
 
     }
 
+    a.putJson = function () {
+
+        xhr.open('put', a.url);
+        if (a.headers) {
+            Object.keys(a.headers).forEach(h => {
+                xhr.setRequestHeader(h, a.headers[h]);
+            })
+        }
+        xhr.setRequestHeader("Content-Type", "application/json;charset=UTF-8")
+        xhr.send(JSON.stringify(a.data));
+        return a;
+
+    }
+
     a.then = function (doneHandlers) {
         if (doneHandlers.success)
             a.success = doneHandlers.success;
@@ -94,12 +108,10 @@ const ajax = function (config) {
         if (xhr.status === 200) {
             var o = JSON.parse(xhr.responseText);
             if (o.succeeded) {
-                //ajaxConfig.events.trigger('success', o);
                 standardSuccess(o);
                 if (a.success)
                     a.success(o);
             } else {
-                //ajaxConfig.events.trigger('fail', o);
                 if (a.fail) {
                     if (a.fail(o) !== false)
                         standardFail(o);
@@ -109,13 +121,18 @@ const ajax = function (config) {
         } else {
             try {
                 var o = JSON.parse(xhr.responseText);
-                standardError(xhr.status, xhr.responseText, o);
-                if (a.error)
-                    var res = a.error(xhr.status, xhr.responseText, o);
+                if (a.error) {
+                    if (a.error(o) !== false)
+                        standardError(o);
+                } else
+                    standardError(o);
             } catch (error) {
-                standardError(xhr.status, xhr.responseText);
-                if (a.error)
-                    var res = a.error(xhr.status, xhr.responseText);
+                var o = { errorCode: xhr.status, statusMessage: xhr.responseText };
+                if (a.error) {
+                    if (a.error(o) !== false)
+                        standardError(o);
+                } else
+                    standardError(o);
             }
         }
     }
@@ -123,11 +140,12 @@ const ajax = function (config) {
     function standardSuccess(obj) {
     }
 
-    function standardError(st, rawResponse, obj) {
+    function standardError(obj) {
+        window.ipc.alert({ message: `Error ${obj.errorCode}: ${obj.statusMessage}`, type: 'error' })
     }
 
     function standardFail(obj) {
-        alert.show(obj.statusMessage);
+        window.ipc.alert({ message: `Error ${obj.errorCode}: ${obj.statusMessage}`, type: 'error' })
     }
 
     return a;

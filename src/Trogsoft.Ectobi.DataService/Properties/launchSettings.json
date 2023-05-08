@@ -1,16 +1,8 @@
 {
   "profiles": {
-    "IIS Express": {
-      "commandName": "IISExpress",
-      "launchBrowser": true,
-      "launchUrl": "swagger",
-      "environmentVariables": {
-        "ASPNETCORE_ENVIRONMENT": "Development"
-      }
-    },
     "SQLite": {
       "commandName": "Project",
-      "commandLineArgs": "--db local --no-security",
+      "commandLineArgs": "--db local --no-security --update-db",
       "launchUrl": "swagger",
       "environmentVariables": {
         "ASPNETCORE_ENVIRONMENT": "Development"

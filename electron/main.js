@@ -2,6 +2,103 @@ const { app, BrowserWindow, ipcMain, dialog } = require('electron');
 const path = require('path');
 const fs = require('fs');
 const wretch = require('wretch');
+const { HubConnectionBuilder } = require("@microsoft/signalr");
+
+class realTimeManager {
+
+  ecto;
+  tokenManager;
+  connection;
+
+  currentTasks = [];
+
+  constructor(ecto, tokenManager) {
+    this.ecto = ecto;
+    this.tokenManager = tokenManager;
+    this.connection = new HubConnectionBuilder()
+      .withUrl('http://' + this.ecto.server + '/events')
+      .build();
+
+    this.connection.onclose(async () => {
+      await this.start();
+    });
+
+    this.connection.on("taskBegun", (task) => {
+      this.currentTasks.push({
+        task: task,
+        progress: { total: 0, count: 0 },
+        log: [],
+        status: '',
+        completed: false,
+        failed: false
+      });
+      this.broadcast('taskBegun', task);
+    });
+
+    this.connection.on("taskProgressChanged", (task, total, count) => {
+      var ct = this.getTask(task);
+      ct.progress.total = total;
+      ct.progress.count = count;
+      this.broadcast('taskProgressChanged', task, total, count);
+    });
+
+    this.connection.on("taskStatusChanged", (task, status) => {
+      var ct = this.getTask(task);
+      ct.status = status;
+      this.broadcast('taskStatusChanged', task, status);
+    });
+
+    this.connection.on("taskLog", (task, msg) => {
+      var ct = this.getTask(task);
+      ct.log.push(msg);
+      this.broadcast('taskLog', task, msg);
+    });
+
+    this.connection.on("taskCompleted", (task) => {
+      // setTimeout(() => {
+        var taskIndex = this.currentTasks.findIndex(x => x.task.id == task.id);
+        this.currentTasks.splice(taskIndex, 1);
+      // }, 60000 * 5);
+      this.broadcast('taskCompleted', task);
+    });
+
+    this.connection.on("taskFailed", (task) => {
+      // setTimeout(() => {
+        var taskIndex = this.currentTasks.findIndex(x => x.task.id == task.id);
+        this.currentTasks.splice(taskIndex, 1);
+      // }, 60000 * 5);
+      this.broadcast('taskFailed', task);
+    });
+
+    // Start the connection.
+    this.start();
+  }
+
+  getAllTasks = () => this.currentTasks;
+
+  getTask(task) {
+    var tasks = this.currentTasks.filter(x => x.task.id == task.id);
+    if (!tasks.length) return;
+    var t = tasks[0];
+    return t;
+  }
+
+  broadcast(event, ...args) {
+    this.ecto.mainWindow.webContents.send(event, args);
+    this.ecto.windows.forEach(win => {
+      win.webContents.send(event, args);
+    })
+  }
+
+  async start() {
+    try {
+      await this.connection.start();
+    } catch (err) {
+      setTimeout(this.start, 5000);
+    }
+  };
+
+}
 
 class tokenManager {
 
@@ -94,9 +191,11 @@ class ectobiMain {
   windows = [];
 
   tokenManager;
+  realTimeManager;
 
   constructor() {
     this.tokenManager = new tokenManager(this);
+    this.realTimeManager = new realTimeManager(this, this.tokenManager);
     this.init();
 
     app.on('window-all-closed', () => {
@@ -114,27 +213,39 @@ class ectobiMain {
       ipcMain.handle('openDialog', (ev, arg) => this.openDialog(arg));
       ipcMain.handle('openFile', (ev, opts) => this.openFile(opts));
       ipcMain.handle('readFileBase64', (ev, opts) => this.readFileBase64(opts));
-      ipcMain.handle('alert', (ev, opts) => dialog.showMessageBox(ev.sender, opts));
+      ipcMain.handle('alert', (ev, opts) => {
+        return dialog.showMessageBox(BrowserWindow.getFocusedWindow(), {
+          type: opts.type || 'info',
+          message: opts.message || 'No message provided',
+          title: opts.title || 'Ectobi'
+        });
+      });
       ipcMain.handle('getToken', () => this.tokenManager.getCurrentToken());
       ipcMain.handle('getConfirmation', (ev, opts) => this.confirm(opts));
+      ipcMain.handle('getBackgroundTasks', () => this.realTimeManager.getAllTasks());
 
-      wretch() 
-      .get(`http://${this.server}/api/ecto/server`)
-      .json()
-      .then(response => {
+      wretch()
+        .get(`http://${this.server}/api/ecto/server`)
+        .json()
+        .then(response => {
 
-        this.tokenManager.serverRequiresLogin = response.result.requiresLogin;
+          this.tokenManager.serverRequiresLogin = response.result.requiresLogin;
 
-        if (response.result.requiresLogin) {
-          if (this.tokenManager.requireLogin())
-            this.createLoginWindow();
-          else
+          if (response.result.requiresLogin) {
+            if (this.tokenManager.requireLogin())
+              this.createLoginWindow();
+            else
+              this.createMainWindow();
+          } else {
             this.createMainWindow();
-        } else {
-          this.createMainWindow();
-        }
+          }
 
-      })
+        }).catch(x => {
+
+          dialog.showErrorBox('Unable to connect', 'Cannot connect to the specified Ectobi server.');
+          app.quit();
+
+        })
 
 
     });
@@ -150,14 +261,14 @@ class ectobiMain {
     }
     this.mainWindow.webContents.send('tokenRefresh');
 
-    this.windows.forEach(win=>{ 
+    this.windows.forEach(win => {
       win.webContents.send('tokenRefresh');
     });
   }
 
   confirm = (opts) => {
 
-    return dialog.showMessageBox(mainWindow, {
+    return dialog.showMessageBox(BrowserWindow.getFocusedWindow(), {
       type: 'question',
       title: opts.title || 'Confirmation',
       message: opts.message || 'Are you sure?',
@@ -250,26 +361,30 @@ class ectobiMain {
     var win = this.openWindow({
       width: opts.width || 500,
       height: opts.height || 700,
-      modal: true,
-      frame: opts.frame || false,
-      parent: this.mainWindow,
+      modal: opts.modal || false,
+      frame: opts.frame || true,
+      show: false,
+      parent: opts.modal ? this.mainWindow : null,
       resizable: opts.resizable || false,
       preload: path.join(__dirname, 'dialogs/dialog-preload.js'),
     });
 
-    win.loadURL(`file://${__dirname}/dialogs/dialog.html`).then(x => {
-      win.webContents.send('dialogConfiguration', opts);
+    win.setMenu(null);
+
+    var qs = '';
+    Object.keys(opts).forEach(k => {
+      qs += `${k}=${opts[k]}/`;
+    })
+
+    win.loadURL(`file://${__dirname}/dialogs/dialog.html#${qs}`).then(x => {
+      if (opts.debug) win.webContents.openDevTools();
     });
 
-    // This is a hack to fix the flicker you get with modal windows. 
-    // It doesn't actually work, but it seems to make things a little better
-    // This has been an issue since 2017 and still there's not actual fix.
-    // https://github.com/electron/electron/issues/10616
-    // https://github.com/electron/electron/issues/9325
-    win.on('close', e => this.mainWindow.setAlwaysOnTop(true));
+    win.on('ready-to-show', l => {
+      win.show();
+    });
 
     win.on('closed', x => {
-      this.mainWindow.setAlwaysOnTop(false);
       var idx = this.windows.findIndex(x => x == win);
       if (idx > -1) {
         this.windows.splice(idx, 1);
@@ -277,7 +392,7 @@ class ectobiMain {
       win = null;
     });
 
-    return win;
+    //return win;
 
   }
 

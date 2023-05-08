@@ -8,6 +8,14 @@ contextBridge.exposeInMainWorld('ipc', {
   closeMe: () => this.close(),
   tokenRefresh: (callback) => ipcRenderer.on('tokenRefresh', callback),
 
+  // background
+  getBackgroundTasks: () => ipcRenderer.invoke('getBackgroundTasks'),
+  taskBegun: (callback) => ipcRenderer.on('taskBegun', callback),
+  taskProgressChanged: (callback) => ipcRenderer.on('taskProgressChanged', callback),
+  taskCompleted: (callback) => ipcRenderer.on('taskCompleted', callback),
+  taskFailed: (callback) => ipcRenderer.on('taskFailed', callback),
+  taskStatusChanged: (callback) => ipcRenderer.on('taskStatusChanged', callback),
+
   // login specific - move them
   login: (username, password) => ipcRenderer.invoke('login', username, password)
 })

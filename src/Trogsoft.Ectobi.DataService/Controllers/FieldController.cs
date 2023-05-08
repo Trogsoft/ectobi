@@ -33,9 +33,9 @@ namespace Trogsoft.Ectobi.DataService.Controllers
         [HttpDelete, Route("{schemaTid}/{fieldTid}")]
         public async Task<IActionResult> DeleteField(string schemaTid, string fieldTid) => SuccessResponse(await fields.DeleteField(schemaTid, fieldTid));
 
-        [HttpPut, Route("{schemaTid}/{fieldTid}")]
-        public async Task<IActionResult> EditField(string schemaTid, string fieldTid, [FromBody] SchemaFieldEditModel model)
-            => SuccessResponse(await fields.EditField(schemaTid, fieldTid, model));
+        [HttpPut, Route("{schemaTid}")]
+        public async Task<IActionResult> EditField(string schemaTid, [FromBody] SchemaFieldEditModel model)
+            => SuccessResponse(await fields.UpdateField(schemaTid, model));
 
     }
 }

@@ -109,22 +109,6 @@ namespace Trogsoft.Ectobi.DataService.Services
 
             if (!validator.Validate()) return validator.GetResult<List<SchemaFieldModel>>();
 
-            //if (!validator.Validate()) return validator.GetReturnValue<List<SchemaFieldModel>>();
-
-            //if (model == null) return Success<List<SchemaFieldModel>>.Error("Model is null.", ErrorCodes.ERR_ARGUMENT_NULL);
-
-            //if (string.IsNullOrWhiteSpace(model.SchemaTid))
-            //    return Success<List<SchemaFieldModel>>.Error("SchemaTid was not specified.", ErrorCodes.ERR_ARGUMENT_NULL);
-
-            //if (string.IsNullOrWhiteSpace(model.ModelName))
-            //    return Success<List<SchemaFieldModel>>.Error("ModelTid was not specified.", ErrorCodes.ERR_ARGUMENT_NULL);
-
-            //var schema = await db.Schemas.SingleOrDefaultAsync(x => x.TextId == model.SchemaTid);
-            //if (schema == null) return Success<List<SchemaFieldModel>>.Error("Schema not found.", ErrorCodes.ERR_NOT_FOUND);
-
-            //var dmodel = await db.Models.SingleOrDefaultAsync(x => x.TextId == model.ModelName);
-            //if (dmodel == null) return Success<List<SchemaFieldModel>>.Error("Model not found.", ErrorCodes.ERR_NOT_FOUND);
-
             var imodel = GetModelDefinition(model.ModelName);
             if (!imodel.Succeeded | imodel.Result == null)
                 return Success<List<SchemaFieldModel>>.Error(imodel.StatusMessage ?? "Model not found.", imodel.ErrorCode);
@@ -135,6 +119,8 @@ namespace Trogsoft.Ectobi.DataService.Services
             {
 
                 // If it already exists, that's fine and we can move to the next one.
+                // Todo: this actually fails if you try to add a model field to a schema version which already exists on another schema version, or in the root.
+                // To fix, probably need to add model fields to the SchemaField poco.
                 var existingField = await db.SchemaFields.SingleOrDefaultAsync(x => x.Name == field.Name);
                 if (existingField != null) continue;
 

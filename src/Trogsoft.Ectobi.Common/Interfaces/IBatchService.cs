@@ -11,7 +11,7 @@ namespace Trogsoft.Ectobi.Common.Interfaces
         Success BackgroundImportBatch(BackgroundTaskInfo job, string temporaryFile);
         Task<Success<BatchModel>> CreateEmptyBatch(BatchModel model);
         Task<Success> DeleteBatch(long batchId);
-        Success ExecutePopulators(long id);
+        Success ExecutePopulators(BackgroundTaskInfo bgti, long id);
         Task<Success<List<BatchModel>>> GetBatches(string schemaTid);
         Task<Success<BackgroundTaskInfo>> ImportBatch(ImportBatchModel model);
     }

@@ -14,9 +14,11 @@ using System.Threading.Tasks;
 using Trogsoft.Ectobi.Common;
 using Trogsoft.Ectobi.Common.Interfaces;
 using Trogsoft.Ectobi.Data;
+using Trogsoft.Ectobi.DataService.Data;
+using Trogsoft.Ectobi.DataService.Interfaces;
 using Trogsoft.Ectobi.DataService.Services;
 
-namespace Trogsoft.Ectobi.DataService.Test.Services
+namespace Trogsoft.Ectobi.DataService.Test.Integration
 {
     [TestFixture]
     public class SchemaServiceTests : TestBase
@@ -38,11 +40,11 @@ namespace Trogsoft.Ectobi.DataService.Test.Services
             var ifts = new Mock<IFileTranslatorService>();
             var opts = new Mock<IOptions<ModuleOptions>>();
             var mapper = new Mock<EctoMapper>().Object;
-            var fieldService = new Mock<IFieldService>().Object; //new FieldService(fieldLogger.Object, db, mapper, moduleManager, backgroundTaskCoordinator.Object, webHookService.Object);
-
+            var fieldService = new Mock<IInternalFieldService>().Object;
             var db = GetDatabase();
+            var data = new EctoData(db, webHookService.Object, null, mapper);
 
-            schemaSvc = new SchemaService(logger.Object, db, mapper, fieldService, lookupService.Object, webHookService.Object, ifts.Object);
+            schemaSvc = new SchemaService(logger.Object, db, mapper, fieldService, lookupService.Object, webHookService.Object, ifts.Object, data);
 
         }
 
@@ -128,9 +130,9 @@ namespace Trogsoft.Ectobi.DataService.Test.Services
             {
                 Assert.That(result.Succeeded, Is.True);
                 Assert.That(result.Result, Is.Not.Null);
-                Assert.That(result.Result!.Name, Is.EqualTo("Test Schema"));
-                Assert.That(result.Result.Fields.Count, Is.EqualTo(3));
             });
+            Assert.That(result.Result!.Name, Is.EqualTo("Test Schema"));
+            Assert.That(result.Result.Fields.Count, Is.EqualTo(3));
         }
     }
 }

@@ -17,7 +17,7 @@ namespace Trogsoft.Ectobi.DataService.Controllers
         }
 
         [HttpGet]
-        public async Task<IActionResult> GetLookupSets() => SuccessResponse(await ls.GetLookupSets());
+        public async Task<IActionResult> GetLookupSets(string? schemaTid = null) => SuccessResponse(await ls.GetLookupSets(schemaTid));
 
         [HttpGet("{id}")]
         public async Task<IActionResult> GetLookupSet(string id) => SuccessResponse(await ls.GetLookupSet(id));

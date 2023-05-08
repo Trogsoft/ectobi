@@ -70,10 +70,30 @@ body.dialog {
     transition: background-color 250ms, color 250ms;
 }
 
+.btn-flex {
+    display: flex;
+    width: 100%;
+    padding: $pad;
+    color: black;
+    text-decoration: none;
+    align-items: center;
+    > * {
+        margin-right: $pad;
+    }
+    label {
+        cursor:pointer;
+    }
+}
+
 .btn:not(.disabled):hover {
     color: $tb-control-col;
     background-color: $tb-dark;
     background: linear-gradient($tb-dark, darken($tb-dark, 7%));
+}
+
+.btn-sm {
+    margin-right: $pad* 0.25;
+    padding: $pad *0.25;
 }
 
 $btn-styles: "danger"$danger,
@@ -247,29 +267,57 @@ $col in $btn-styles {
                 min-height: 40px;
 
                 .root {
-                    transition: background 250ms, background-color 250ms;
-                    background-color: $toolbar;    
-                    background: linear-gradient($toolbar, darken($toolbar, 7%));           
+                    background-color: $toolbar;
+                    background: linear-gradient($toolbar, darken($toolbar, 7%));
                     text-decoration: none;
                     color: black;
-                    padding: $pad * 1.2;
                     display: flex;
-                    .icon {
-                        margin-right: $pad;
-                    }
-                    .badge {
-                        margin-left: $pad;
-                        padding: 0 math.div($pad, 1.5);
-                        border-radius: $pad;
-                        background-color: red;
-                        color: white;
-                    }
+                    position: relative;
+
                 }
 
                 .root:hover {
-                    background-color: lighten($toolbar, 20%);    
-                    background: linear-gradient(lighten($toolbar, 20%), darken($toolbar, 13%));                               
+                    background-color: lighten($toolbar, 20%);
+                    background: linear-gradient(lighten($toolbar, 20%), darken($toolbar, 13%));
                 }
+
+                #backgroundTaskStatus {
+                    display: flex;
+                    flex-direction: column;
+
+                    .bg-task {
+                        padding: $pad;
+                        display: flex;
+                        .icon {
+                            margin-right: $pad;
+                        }
+
+                        .bg-task-info {
+                            flex-grow: 1;
+                            display: flex;
+                            flex-direction: column;
+
+                            .progress {
+                                width: 100%;
+                                height: $pad;
+                                border: 1px solid $tb-dark;
+                                border-radius: $pad;
+
+                                .progress-bar {
+                                    border-radius: $pad;
+                                    min-width: 0;
+                                    height: $pad;
+                                    background-color: $highlight;
+                                    background: linear-gradient($highlight, darken($highlight, 7%));
+                                }
+                            }
+                        }
+
+                        border-bottom: 1px solid $tb-dark;
+                    }
+
+                }
+
             }
 
         }
@@ -288,12 +336,19 @@ $col in $btn-styles {
         min-height: 50px - $pad;
         max-height: 50px - $pad;
         display: flex;
-        justify-content:space-between;
         align-items: center;
+
         .sb-panel {
             padding: $pad $pad; //math.div($pad, 3); 
             border-right: 1px solid $tb-dark;
+            margin-right: $pad;
+            display: flex;
+
+            .sb-panel-item {
+                margin-right: $pad;
+            }
         }
+
         .sb-panel:last-of-type {
             border-right: unset;
         }
@@ -409,14 +464,23 @@ $col in $btn-styles {
 
 }
 
-
-.tabs {
+.tabs,
+.dialog-tabs {
     width: 100%;
     box-sizing: border-box;
     display: flex;
     flex-direction: column;
 
-    .tab-row {
+    .dialog-tabs-row {
+        margin-left: -$pad * 1.5;
+        margin-right: -$pad * 1.5;
+        padding-left: $pad * 1.5;
+        padding-right: $pad * 1.5;
+        margin-bottom: $pad;
+    }
+
+    .tab-row,
+    .dialog-tabs-row {
         display: flex;
         border-bottom: 1px solid $tb-dark;
         max-width: 100%;
@@ -445,6 +509,33 @@ $col in $btn-styles {
 
         }
 
+        .dialog-tab {
+            text-decoration: none;
+            white-space: nowrap;
+            margin-top: 2px;
+            padding: $pad * 0.5;
+            padding-right: $pad;
+            margin-right: $pad * 0.5;
+            border-right: 1px solid $tb-dark;
+            color: $tb-dark;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+
+            .icon {
+                font-size: 30px;
+            }
+        }
+
+        .dialog-tab:last-of-type {
+            border-right: 0;
+        }
+
+        .dialog-tab.active {
+            color: black;
+            font-weight: bold;
+        }
+
         .tab.active {
             margin-bottom: -2px;
             border-bottom: 2px solid $toolbar;
@@ -453,7 +544,8 @@ $col in $btn-styles {
         }
     }
 
-    .tab-content {
+    .tab-content,
+    .dialog-tab-content {
         box-sizing: border-box;
         height: 100%;
         max-height: 100%;
@@ -472,17 +564,134 @@ $col in $btn-styles {
 
 }
 
+.popup {
+    box-sizing: border-box;
+    display: none;
+    border: 1px solid $tb-dark;
+    background-color: white;
+    border-radius: 0 0 $pad $pad;
+    transition: border-radius 300ms;
+}
+
+.popup.show {
+    display: block;
+}
+
+.filter-popup {
+    max-height: 60vh;
+    overflow: auto;
+
+    .filter-group {
+        .filter-group-header {
+            padding: $pad * 0.5;
+            font-weight: bold;
+            background-color: lighten($toolbar, 10%);
+            display: flex;
+            justify-content: space-between;
+
+            filter-group-header-title {}
+
+            .options {}
+        }
+
+        .filter-group-items {
+            .filter-group-item {
+                padding: $pad * 0.5;
+                display: flex;
+                color: black;
+                text-decoration: none;
+
+                .icon {
+                    min-width: 16px;
+                    margin-right: $pad * 0.5;
+                }
+
+                .label {
+                    margin-right: $pad * 0.5;
+                }
+            }
+
+            .filter-group-item:hover {
+                background-color: $highlight;
+            }
+        }
+    }
+}
+
+.data-query {
+    display: flex;
+    flex-direction: column;
+
+    .query {
+        background-color: white;
+        border-bottom: 1px solid $tb-dark;
+        display: flex;
+        padding: $pad;
+        flex-direction: row;
+
+        .filter {
+            box-sizing: border-box;
+            border: 1px solid $tb-dark;
+            padding: $pad * 0.5;
+            border-radius: $pad * 0.5;
+            display: flex;
+            margin-right: $pad;
+            margin-bottom: $pad;
+            background: linear-gradient(white, darken(white, 7%));
+            transition: border-radius 300ms;
+
+            .label {
+                font-weight: bold;
+                margin-right: $pad * 0.5;
+                border-right: 1px solid $tb-dark;
+                padding-right: $pad * 0.5;
+            }
+
+            .value {
+                margin-right: $pad * 0.5;
+                border-right: 1px solid $tb-dark;
+                padding-right: $pad * 0.5;
+            }
+
+        }
+
+        .filter.open {
+            border-radius: $pad $pad 0 0;
+            border-bottom: 0;
+            background-color: $highlight;
+            background: linear-gradient($highlight, darken($highlight, 7%));
+        }
+
+        .filter:hover {
+            background-color: $btn;
+            background: linear-gradient($btn, darken($btn, 7%));
+        }
+
+    }
+
+    .data-tbl {
+        flex-grow: 1;
+    }
+}
+
 #content {
     padding: $pad * 1.5;
 }
 
+.dialog-tabs {
+    margin-top: -($pad * 1.5);
+}
+
+
 .progress {
     border: 1px solid $tb-dark;
     border-radius: math.div($pad, 3);
+
     .progress-bar {
         background-color: $success;
         background: linear-gradient($success, darken($success, 7%));
         white-space: nowrap;
+
         .progress-label {
             overflow: hidden;
         }

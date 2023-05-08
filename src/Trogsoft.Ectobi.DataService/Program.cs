@@ -11,11 +11,10 @@ using Trogsoft.Ectobi.DataService.Interfaces;
 using Trogsoft.Ectobi.DataService.Services;
 using Microsoft.AspNetCore.Authorization;
 using Trogsoft.Ectobi.Common;
-using Microsoft.EntityFrameworkCore.Sqlite;
 using System.Data;
 using Hangfire.LiteDB;
 using System.Reflection;
-using Trogsoft.Ectobi.DataService.Validation;
+using Trogsoft.Ectobi.DataService.Data;
 
 namespace Trogsoft.Ectobi.DataService
 {
@@ -26,6 +25,7 @@ namespace Trogsoft.Ectobi.DataService
         private static bool setupMode;
         private static bool forceMode;
         private static bool noSecurityMode;
+        private static bool updateDatabase = false;
 
         public static void Main(string[] args)
         {
@@ -40,6 +40,7 @@ namespace Trogsoft.Ectobi.DataService
             setupMode = args.Contains("--setup-default", StringComparer.CurrentCultureIgnoreCase);
             forceMode = args.Contains("--force", StringComparer.CurrentCultureIgnoreCase);
             noSecurityMode = args.Contains("--no-security", StringComparer.CurrentCultureIgnoreCase);
+            updateDatabase = args.Contains("--update-db", StringComparer.CurrentCultureIgnoreCase);
 
             var localConfigPath = new LocalConfigFileProvider();
 
@@ -119,19 +120,22 @@ namespace Trogsoft.Ectobi.DataService
             builder.Services.AddTransient<IEventNotificationService, EventNotificationService>();
             builder.Services.AddTransient<ISchemaService, SchemaService>();
             builder.Services.AddTransient<IFieldService, FieldService>();
+            builder.Services.AddTransient<IInternalFieldService, FieldService>();
             builder.Services.AddTransient<IBatchService, BatchService>();
             builder.Services.AddTransient<ILookupService, LookupService>();
             builder.Services.AddTransient<ILookupStorage, LookupStorage>();
             builder.Services.AddTransient<IWebHookService, WebHookService>();
             builder.Services.AddTransient<IWebHookManagementService, WebHookManagementService>();
             builder.Services.AddTransient<IFileTranslatorService, FileTranslatorService>();
-            builder.Services.AddSingleton<IBackgroundTaskCoordinator, BackgroundTaskCoordinator>();
             builder.Services.AddTransient<IAuthService, UserService>();
             builder.Services.AddTransient<IEctoMapper, EctoMapper>();
             builder.Services.AddTransient<IEctoServer, EctoServer>();
             builder.Services.AddTransient<IRandomStringService, RandomStringService>();
             builder.Services.AddTransient<IDataService, Services.DataService>();
             builder.Services.AddTransient<IModelService, ModelService>();
+            builder.Services.AddTransient<IEctoData, EctoData>();
+
+            builder.Services.AddSingleton<IBackgroundTaskCoordinator, BackgroundTaskCoordinator>();
 
             builder.Services.AddControllers();
             builder.Services.AddSignalR();
@@ -205,12 +209,18 @@ namespace Trogsoft.Ectobi.DataService
 
             var app = builder.Build();
 
-            if (setupDb)
+            if (setupDb || updateDatabase)
             {
                 using (var scope = app.Services.CreateScope())
                 {
-                    var db = scope.ServiceProvider.GetService<EctoDb>();
-                    db.Database.EnsureCreated();
+                    var db = scope.ServiceProvider.GetRequiredService<EctoDb>();
+                    if (dbType == "local")
+                        db.Database.EnsureCreated();
+                    else 
+                        db.Database.Migrate();
+
+                    Console.WriteLine("Database configuration applied.");
+
                 }
             }
 

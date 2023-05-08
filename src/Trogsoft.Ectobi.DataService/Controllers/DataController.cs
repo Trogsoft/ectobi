@@ -10,6 +10,7 @@ namespace Trogsoft.Ectobi.DataService.Controllers
     [Route("api/data")]
     public class DataController : EctoApiController
     {
+
         private readonly IDataService data;
 
         public DataController(IDataService data)
@@ -17,10 +18,14 @@ namespace Trogsoft.Ectobi.DataService.Controllers
             this.data = data;
         }
 
-
         [HttpPost("query")]
         public async Task<IActionResult> GetData([FromBody] DataQueryModel query) =>
             SuccessResponse(await data.GetData(query));
+
+
+        [HttpGet("fieldFilter/{schema}")]
+        public async Task<IActionResult> GetFieldFilters(string schema) =>
+            SuccessResponse(await data.GetFilters(schema));
 
     }
 }

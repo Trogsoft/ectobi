@@ -24,5 +24,7 @@ namespace Trogsoft.Ectobi.Common
         public static readonly int ERR_TYPE_MISMATCH = 0x000e;
         public static readonly int ERR_VALUE_TOO_LONG = 0x000f;
         public static readonly int ERR_VALUE_TOO_SHORT = 0x0010;
+        public static readonly int ERR_ENTITY_ALREADY_EXISTS = 0x0011;
+        public static readonly int ERR_ARGUMENT_INVALID = 0x0012;
     }
 }

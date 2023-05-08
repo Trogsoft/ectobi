@@ -13,5 +13,6 @@
             "runOptions": {
                 "runOn": "folderOpen"
             }
-        }]
+        }
+    ]
     }

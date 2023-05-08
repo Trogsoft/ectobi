@@ -47,8 +47,8 @@ class ectobi extends ectoComponent {
                 <div class="tree-container">
                     <div class="tree"></div>
                     <div class="roots">
-                        <a href="#" class="root" id="backgroundTaskStatus">
-                        </a>
+                        <div class="root" id="backgroundTaskStatus">
+                        </div>
                     </div>
                 </div>
                 <div class="tabs">

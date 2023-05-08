@@ -30,7 +30,7 @@ class table extends ectoComponent {
         this.#state.rowCount = this.#data.length;
     }
 
-    loadValueMap = (valueMap) => {
+    loadValueMap = (valueMap, performRender = true) => {
         this.opts.headers = {}
         valueMap.headings.forEach(x=>{
             this.opts.headers[x] = {
@@ -48,10 +48,29 @@ class table extends ectoComponent {
             this.#data.push(rowObject);
         });
 
-        this.render();
+        if (performRender)
+            this.render();
+    }
+
+    appendValueMap = (valueMap, performRender = true) => {
+
+        valueMap.rows.forEach((row, rowix)=>{
+            var rowObject = { id: `row-${rowix}` };
+            row.forEach((col, colix)=>{
+                var head = valueMap.headings[colix];
+                rowObject[head] = col;
+            })
+            this.#data.push(rowObject);
+        });
+
+        if (performRender)
+            this.render();
+
     }
 
     render() {
+
+        if (document.querySelector(this.opts.target) == null) return;
 
         var headers = () => {
             if (!this.opts.headers)
@@ -75,7 +94,7 @@ class table extends ectoComponent {
                 Object.keys(this.opts.headers).forEach(k => {
                     var value = r[k];
                     var header = this.opts.headers[k];
-                    if (header.format) value = header.format(r[k]);
+                    if (header.format) value = header.format(r[k], r);
                     html += `<td>${value}</td>`;
                 });
                 html += ' </tr>';

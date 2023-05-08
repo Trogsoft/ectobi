@@ -13,6 +13,7 @@ namespace Trogsoft.Ectobi.Data
         public SchemaFieldFlags Flags { get; set; }
         public long? PopulatorId { get; set; }
         public Populator? Populator { get; set; }
+        public string? PopulatorConfiguration { get; set; }
         public long? ProcessId { get; set; }
         public Process? Process { get; set; }
         public long? LookupSetId { get; set; }

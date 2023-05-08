@@ -23,7 +23,7 @@ namespace Trogsoft.Ectobi.DataService.Test
         [SetUp]
         public virtual void Setup()
         {
-
+            File.Delete(PathToEctoDb);
         }
 
         protected string PathToTestFolder { get; }

@@ -6,6 +6,10 @@ const fieldFlags = {
     16: 'Personally Identifiable Information'
 };
 
+const filterType = {
+    set: 1
+}
+
 const fieldType = {
     Text: 1,
     Integer: 2,
@@ -64,4 +68,4 @@ const webHookEventType = {
     }
 }
 
-export { fieldFlags, fieldType, webHookEventType, ectoModelPropertyFlags }
+export { fieldFlags, fieldType, webHookEventType, ectoModelPropertyFlags, filterType }

@@ -1,3 +1,11 @@
+/**
+ * @typedef {Object} Success
+ * @property {bool} succeeded - True or false depending on the success of the operation
+ * @property {*} result - the result of the operation, if any.
+ * @property {string} statusMessage - a status message usually accompanying a failure response
+ * @property {int} errorCode - a numeric error code  
+ */
+
 export class ectoClient {
 
     host = 'localhost:7247';
@@ -8,14 +16,33 @@ export class ectoClient {
         this.updateToken(token);
     }
 
+    /**
+     * Get information about the current server
+     * @returns {Success} Information about the connected server.
+     * @property {bool} result.requiresLogin - does this server require login? 
+     * @property {string} result.name - the nameo of the connected server. 
+     */
     getServerInfo = () => this.get('api/ecto/server');
 
     model = {
+        /**
+         * Get a list of Models defined on the server.
+         * @returns A Success object where the Result is a list of Models
+         */
         list: () => this.get('api/model'),
+        /**
+         * Add model properties to the current schema
+         * @param {Object} model - details of the model and which schema to apply it to
+         * @param {string} model.schemaTid - the schema to add model properties to 
+         * @param {string} model.modelName - the model whose properties should be applied
+         * @param {string[]} model.properties = the properties to apply to the schema 
+         * @returns {Success} a Success object containing a list of SchemaFieldModels as its result. 
+         */
         configure: (model) => this.postJson('api/model/config', model)
     }
 
     data = {
+        getFieldFilters: (schema) => this.get('api/data/fieldFilter/'+schema),
         query: (query) => this.postJson('api/data/query', query)
     }
 
@@ -44,11 +71,12 @@ export class ectoClient {
         listBySchemaVersion: (schemaTid, version) => this.get(`api/field/${schemaTid}/version/${version}`),
         create: (schemaTid, model) => this.postJson(`api/field/${schemaTid}`, model),
         delete: (schemaTid, fieldTid) => this.delete(`api/field/${schemaTid}/${fieldTid}`),
+        update: (schemaTid, model) => this.putJson(`api/field/${schemaTid}`, model),
         getLatest: (schemaTid, fieldTid) => this.get(`api/field/${schemaTid}/${fieldTid}`)
     }
 
     lookup = {
-        list: () => this.get(`api/lookup`),
+        list: (schema) => this.get(`api/lookup/?schemaTid=${schema}`),
         get: (id) => this.get(`api/lookup/${id}`),
         create: (model) => this.postJson(`api/lookup`, model)
     }
@@ -92,7 +120,8 @@ export class ectoClient {
                 headers: this.headers
             }).delete().then({
                 success: h => resolve(h),
-                fail: h => reject(h)
+                fail: h => reject(h),
+                error: h => reject(h)
             });
         });
     }
@@ -106,7 +135,22 @@ export class ectoClient {
                 headers: this.headers
             }).postJson().then({
                 success: h => resolve(h),
-                fail: h => reject(h)
+                fail: h => reject(h),
+                error: h => reject(h)
+            })
+        });
+    }
+
+    putJson = (url, model) => {
+        return new Promise((resolve, reject) => {
+            ajax({
+                url: `https://${this.host}/${url}`,
+                data: model,
+                headers: this.headers
+            }).putJson().then({
+                success: h => resolve(h),
+                fail: h => reject(h),
+                error: h => reject(h)
             })
         });
     }

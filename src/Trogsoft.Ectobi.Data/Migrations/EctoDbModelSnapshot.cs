@@ -17,7 +17,7 @@ namespace Trogsoft.Ectobi.Data.Migrations
         {
 #pragma warning disable 612, 618
             modelBuilder
-                .HasAnnotation("ProductVersion", "7.0.4")
+                .HasAnnotation("ProductVersion", "7.0.5")
                 .HasAnnotation("Relational:MaxIdentifierLength", 128);
 
             SqlServerModelBuilderExtensions.UseIdentityColumns(modelBuilder);
@@ -274,10 +274,15 @@ namespace Trogsoft.Ectobi.Data.Migrations
                     b.Property<string>("Name")
                         .HasColumnType("nvarchar(max)");
 
+                    b.Property<long?>("SchemaId")
+                        .HasColumnType("bigint");
+
                     b.Property<string>("TextId")
                         .HasColumnType("nvarchar(max)");
 
                     b.HasKey("Id");
+
+                    b.HasIndex("SchemaId");
 
                     b.ToTable("LookupSets");
                 });
@@ -843,6 +848,15 @@ namespace Trogsoft.Ectobi.Data.Migrations
                         .IsRequired();
 
                     b.Navigation("SchemaVersion");
+                });
+
+            modelBuilder.Entity("Trogsoft.Ectobi.Data.LookupSet", b =>
+                {
+                    b.HasOne("Trogsoft.Ectobi.Data.Schema", "Schema")
+                        .WithMany()
+                        .HasForeignKey("SchemaId");
+
+                    b.Navigation("Schema");
                 });
 
             modelBuilder.Entity("Trogsoft.Ectobi.Data.LookupSetValue", b =>

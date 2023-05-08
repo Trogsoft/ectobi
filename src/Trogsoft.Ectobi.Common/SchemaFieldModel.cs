@@ -16,8 +16,11 @@
 
     public class SchemaFieldEditModel : SchemaFieldModel
     {
+        public string? SchemaTid { get; set; }
         public List<string> RawValues { get; set; } = new List<string>();
         public string? ModelField { get; set; }
+        public int Version { get; set; }
+        public string Set { get; set; }
     }
 
 }

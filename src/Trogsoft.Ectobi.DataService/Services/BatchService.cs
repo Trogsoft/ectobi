@@ -1,5 +1,7 @@
-﻿using Hangfire.Server;
+﻿using DocumentFormat.OpenXml.Wordprocessing;
+using Hangfire.Server;
 using Microsoft.EntityFrameworkCore;
+using Newtonsoft.Json;
 using System.Security.Cryptography.Xml;
 using Trogsoft.Ectobi.Common;
 using Trogsoft.Ectobi.Common.Interfaces;
@@ -62,7 +64,7 @@ namespace Trogsoft.Ectobi.DataService.Services
 
             var temporaryFileId = temp.StoreObject(model); 
 
-            BackgroundTaskInfo job = new BackgroundTaskInfo();
+            BackgroundTaskInfo job = new BackgroundTaskInfo($"Importing {model.BatchName} to {schema.Name}");
             bg.Enqueue<IBatchService>(x => x.BackgroundImportBatch(job, temporaryFileId));            
             return new Success<BackgroundTaskInfo>(job);
         }
@@ -86,33 +88,58 @@ namespace Trogsoft.Ectobi.DataService.Services
         public Success BackgroundImportBatch(BackgroundTaskInfo job, string temporaryFile)
         {
 
-            if (temporaryFile == null) return Success.Error("TemporaryFile cannot be null.", ErrorCodes.ERR_ARGUMENT_NULL);
+            bg.TaskBegun(job);
+            bg.TaskStatusChanged(job, "Loading data set");
+
+            if (temporaryFile == null)
+            {
+                bg.TaskFailed(job);
+                return Success.Error("TemporaryFile cannot be null.", ErrorCodes.ERR_ARGUMENT_NULL);
+            }
             var model = temp.GetStoredObject<ImportBatchModel>(temporaryFile);
 
-            if (model == null) return Success.Error("Model cannot be null", ErrorCodes.ERR_ARGUMENT_NULL);
+            if (model == null)
+            {
+                bg.TaskFailed(job);
+                return Success.Error("Model cannot be null", ErrorCodes.ERR_ARGUMENT_NULL);
+            }
 
             var schema = db.Schemas.SingleOrDefault(x => x.TextId == model.SchemaTid);
-            if (schema == null) return Success.Error("Schema not found.", ErrorCodes.ERR_NOT_FOUND);
+            if (schema == null)
+            {
+                bg.TaskFailed(job);
+                return Success.Error("Schema not found.", ErrorCodes.ERR_NOT_FOUND);
+            }
 
             if (!string.IsNullOrWhiteSpace(model.BatchSource))
             {
                 if (db.Batches.Any(x => x.Source == model.BatchSource && x.SchemaVersion.SchemaId == schema.Id))
+                {
+                    bg.TaskFailed(job);
                     return Success.Error("Batch has previously been uploaded.", ErrorCodes.ERR_BATCH_EXISTS);
+                }
             }
 
             if (!string.IsNullOrWhiteSpace(model.BatchName))
             {
                 if (db.Batches.Any(x => x.Name == model.BatchName && x.SchemaVersion.SchemaId == schema.Id))
+                {
+                    bg.TaskFailed(job);
                     return Success.Error("Batch name is in use.", ErrorCodes.ERR_BATCH_EXISTS);
+                }
             }
 
             // Always import into the maximum version unless otherwise specified
             var schemaVersion = db.SchemaVersions.OrderByDescending(x => x.Created).FirstOrDefault(x => x.SchemaId == schema.Id);
             if (schemaVersion == null)
+            {
+                bg.TaskFailed(job);
                 return Success.Error("No schema versions defined.");
+            }
 
             var fields = db.SchemaFieldVersions.Where(x => x.SchemaVersionId == schemaVersion.Id).ToList(); // Cache an in-memory copy of the fields for future reference
 
+            bg.TaskStatusChanged(job, "Validating input...");
             List<ValidationResult> validationResults = new();
             validationResults.AddRange(ValidateBatchForImport(model, fields));
 
@@ -145,6 +172,10 @@ namespace Trogsoft.Ectobi.DataService.Services
             db.Batches.Add(batch);
             db.SaveChanges();
 
+            bg.TaskStatusChanged(job, "Importing data");
+            bg.TaskProgressChanged(job, model.ValueMap.Rows.Count, 0);
+
+            var c = 0;
             foreach (var row in model.ValueMap.Rows)
             {
                 var i = 0;
@@ -156,77 +187,123 @@ namespace Trogsoft.Ectobi.DataService.Services
                     if (field == null)
                         throw new Exception("Field not found.");
 
-                    record.Values.Add(new Value
+                    Value newItem = new Value
                     {
                         SchemaFieldVersionId = field.Id,
                         RawValue = row[i]
-                    });
+                    };
+
+                    if (field.Type == SchemaFieldType.Set)
+                    {
+                        var lookupType = db.LookupSetValues.SingleOrDefaultAsync(x => x.LookupSetId == field.LookupSetId && x.Name == row[i]).Result;
+                        if (lookupType != null) 
+                            newItem.IntegerValue = lookupType.NumericValue;
+                    }
+
+                    record.Values.Add(newItem);
 
                     i++;
                 }
+                c++;
                 batch.Records.Add(record);
+                bg.TaskProgressChanged(job, model.ValueMap.Rows.Count, c);
             }
 
             batch.Flags = BatchFlags.Processing;
             db.SaveChanges();
 
+            bg.TaskCompleted(job);
             iwh.Dispatch(WebHookEventType.BatchCreated, mapper.Map<BatchModel>(batch)).Wait();
 
             transaction.Commit();
 
             temp.Remove(temporaryFile);
-            bg.Enqueue<IBatchService>(x => x.ExecutePopulators(batch.Id));
+            var bgti = new BackgroundTaskInfo($"Populating columns");
+            bg.Enqueue<IBatchService>(x => x.ExecutePopulators(bgti, batch.Id));
 
             return new Success(true);
 
         }
 
-        public Success ExecutePopulators(long id)
+        public Success ExecutePopulators(BackgroundTaskInfo bgti, long batchId)
         {
+
+            bg.TaskBegunAsync(bgti).Wait();
 
             var batch = db.Batches
                 .Include(x => x.SchemaVersion)
                 .ThenInclude(x => x.Fields)
                 .ThenInclude(x => x.Populator)
-                .SingleOrDefault(x => x.Id == id);
-            if (batch == null) return new Success(true, "There was no work to do.");
+                .SingleOrDefault(x => x.Id == batchId);
+            if (batch == null)
+            {
+                bg.TaskCompleted(bgti);
+                return new Success(true, "There was no work to do.");
+            }
 
             var count = 0;
             var records = db.Records.Where(x => x.BatchId == batch.Id).Select(x => x.Id).ToList();
+            bg.TaskProgressChanged(bgti, records.Count, 0);
+            var rid = 0;
             foreach (var recordId in records)
             {
+                rid++;
+                bg.TaskProgressChanged(bgti, records.Count, rid);
                 foreach (var field in batch.SchemaVersion.Fields.Where(x => x.Populator != null))
                 {
-                    var populator = mm.GetPopulator(field.Populator!.Name);
+
+                    var pconfig = field.PopulatorConfiguration;
+                    var poptions = new Dictionary<string, string>();
+
+                    if (!string.IsNullOrWhiteSpace(pconfig))
+                        poptions = JsonConvert.DeserializeObject<Dictionary<string, string>>(pconfig);  
+
+                    var populator = mm.GetPopulator(field.Populator!.TextId);
                     if (populator == null) continue;
 
+                    var rt = populator.GetReturnType();
                     var recordField = db.Values.SingleOrDefault(x => x.RecordId == recordId && x.SchemaFieldVersionId == field.Id);
                     if (recordField == null)
                     {
                         recordField = new Value
                         {
                             RecordId = recordId,
-                            SchemaFieldVersionId = field.Id,
-                            RawValue = populator.GetString()
+                            SchemaFieldVersionId = field.Id
                         };
                         db.Values.Add(recordField);
                     }
-                    else
-                    {
-                        recordField.RawValue = populator.GetString();
-                    }
 
+                    switch (rt)
+                    {
+                        case PopulatorReturnType.Integer:
+                            recordField.IntegerValue = populator.GetInteger(poptions);
+                            break;
+
+                        case PopulatorReturnType.Decimal:
+                            recordField.DecimalValue = populator.GetDecimal(poptions);
+                            break;
+
+                        case PopulatorReturnType.String:
+                        default:
+                            recordField.RawValue = populator.GetString(poptions);
+                            break;
+                    }
+                
                 }
 
                 count++;
                 if (count % 1000 == 0)
                 {
+                    bg.Log(bgti, "Saving...");
                     db.SaveChanges();
                     count = 0;
                 }
 
             }
+            bg.Log(bgti, "Saving...");
             db.SaveChanges();
+
+            bg.TaskCompleted(bgti);
 
             return new Success();
 

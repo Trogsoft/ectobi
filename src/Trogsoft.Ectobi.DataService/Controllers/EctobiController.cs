@@ -24,6 +24,8 @@ namespace Trogsoft.Ectobi.DataService.Controllers
 
         [HttpGet, Route("api/ecto/populator"), Authorize]
         public async Task<IActionResult> GetPopulators() => SuccessResponse(mm.GetPopulatorDefinitions());
+        [HttpGet, Route("api/ecto/populator/{populator}/options")]
+        public async Task<IActionResult> GetPopulatorOptions(string populator) => SuccessResponse(mm.GetPopulatorOptions(populator));
 
         [HttpGet, Route("api/ecto/importer"), Authorize]
         public async Task<IActionResult> GetFileImporters() => SuccessResponse(mm.GetFileHandlers());

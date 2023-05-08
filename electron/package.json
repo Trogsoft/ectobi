@@ -12,6 +12,8 @@
     "electron": "^23.2.0"
   },
   "dependencies": {
+    "@microsoft/signalr": "^7.0.5",
+    "@popperjs/core": "^2.11.7",
     "ag-grid-community": "^29.2.0",
     "dayjs": "^1.11.7",
     "reefjs": "^12.1.1",

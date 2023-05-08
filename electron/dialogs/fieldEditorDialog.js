@@ -7,6 +7,7 @@ export class fieldEditorDialog extends dialogBase {
 
     populators = [];
     lookups = [];
+    models = [];
 
     model = {
         id: 0,
@@ -25,6 +26,10 @@ export class fieldEditorDialog extends dialogBase {
                 this.lookups = x.result;
             })
         }).then(() => {
+            return this.client.model.list().then(x => {
+                this.models = x.result;
+            });
+        }).then(() => {
             if (arg.field) {
                 this.client.field.getLatest(arg.schema, arg.field).then(x => {
                     this.model = x.result;
@@ -37,18 +42,115 @@ export class fieldEditorDialog extends dialogBase {
             }
         });
 
+        this.configureTabs();
+
     }
 
     save = (e) => {
         if (this.model.id == 0) {
             this.client.field.create(this.args.schema, this.model).then(x => {
-                if (x.succeeded) {
-                    this.close();
-                } else {
-                    console.log(x);
-                }
+                this.close();
+            });
+        } else {
+            this.client.field.update(this.args.schema, this.model).then(x => {
+                this.close();
             });
         }
+    }
+
+    configureTabs() {
+
+        let modelSelectList = () => {
+            var html = '<option>No model</option>';
+            this.models.forEach(m => {
+                var sel = this.model.modelName == m.textId ? '@selected' : '';
+                html += `<option ${sel} value="${m.textId}">${m.name}</option>`;
+            });
+            return html;
+        }
+
+        let fieldTypes = () => {
+            var html = '';
+            Object.keys(fieldType).sort().forEach(x => {
+                if (typeof (fieldType[x]) !== 'function') {
+                    var sel = this.model.type == fieldType[x] ? 'selected' : '';
+                    html += `<option value="${fieldType[x]}" ${sel}>${x}</option>`;
+                }
+            });
+            return html;
+        }
+
+        let modelProperties = () => {
+            var html = '';
+            if (this.model.modelName) {
+                var sModel = this.models.filter(x => x.textId == this.model.modelName);
+                if (sModel.length == 0) return '';
+
+                html += `<div class="form-field"><label>Property</label>
+                <select class="form-control model-field" name="modelField">`;
+                sModel[0].properties.forEach(p => {
+                    var sel = p.textId == this.model.modelField ? 'selected' : '';
+                    html += `<option ${sel} value="${p.textId}">${p.name}</option>`;
+                })
+                html += `</select></div>`;
+            }
+            return html;
+        }
+
+        let typeSpecificOptions = () => {
+            var html = '';
+            if (this.model.type == fieldType.Populator) {
+                html += `<div class="form-field"><label>Populator</label>
+                <select class="form-control model-field" name="populator"><option></option>`;
+                this.populators.forEach(pop => {
+                    html += `<option value="${pop.textId}" ${this.model.populator == pop.textId ? 'selected' : ''}>${pop.name}</option>`;
+                })
+                html += `</select></div>`;
+            }
+
+            if (this.model.type == fieldType.LookupSet) {
+                html += `<div class="form-field"><label>Lookup Set</label>
+                <select class="form-control model-field" name="set"><option></option><option value="__create__">(Create new Lookup Set)</option>
+                `;
+                this.lookups.forEach(l => {
+                    html += `<option value="${l.textId}" ${this.model.lookupTid == l.textId ? 'selected' : ''}>${l.name}</option>`;
+                })
+                html += '</select></div>';
+            }
+            return html;
+        }
+
+        this.addTab('details', 'Details', 'edit-box-line', () => {
+            return `
+            <div class="form-field">
+                <label>Field Name</label>
+                <input type="text" class="form-control model-field" name="name" @value="${this.model.name || ''}" />
+            </div>
+            <div class="form-field">
+                <label>Description</label>
+                <textarea class="form-control model-field" name="description">${this.model.description || ''}</textarea>
+            </div>
+            `;
+        });
+
+        this.addTab('type', 'Data Type', 'hashtag', () => `
+            <div class="form-field">
+                <label>Type</label>
+                <select name="type" class="form-control model-field">${fieldTypes()}</select>
+            </div>
+
+            ${typeSpecificOptions()}
+        `);
+
+        this.addTab('model', 'Model', 'user-star-line', () => `
+            <div class="form-field">
+                <label>Model</label>
+                <select name="modelName" class="form-control model-field">${modelSelectList()}</select>
+            </div>
+
+            ${modelProperties()}
+        `);
+
     }
 
     bind() {
@@ -67,67 +169,10 @@ export class fieldEditorDialog extends dialogBase {
 
     render() {
 
-        let fieldTypes = () => {
-            var html = '';
-            Object.keys(fieldType).sort().forEach(x => {
-                if (typeof (fieldType[x]) !== 'function') {
-                    var sel = this.model.type == fieldType[x] ? 'selected' : '';
-                    html += `<option value="${fieldType[x]}" ${sel}>${x}</option>`;
-                }
-            });
-            return html;
-        }
-
-        let typeSpecificOptions = () => {
-            var html = '';
-            if (this.model.type == fieldType.Populator) {
-                html += `<div class="form-field"><label>Populator</label>
-                <select class="form-control model-field" name="populator"><option></option>`;
-                this.populators.forEach(pop => {
-                    html += `<option value="${pop.textId}" ${this.model.populator == pop.textId ? 'selected' : ''}>${pop.name}</option>`;
-                })
-                html += `</select></div>`;
-            }
-
-            if (this.model.type == fieldType.LookupSet) {
-                html += `<div class="form-field"><label>Lookup Set</label>
-                <select class="form-control model-field" name="set"><option></option><option value="-1">(Create new Lookup Set)</option>
-                `;
-                this.lookups.forEach(l => {
-                    html += `<option value="${l.textId}" ${this.model.lookupTid == l.textId ? 'selected' : ''}>${l.name}</option>`;
-                })
-                html += '</select></div>';
-            }
-            return html;
-        }
-
         var html = `
-            <div class="form-field">
-                <label>Field Name</label>
-                <input type="text" class="form-control model-field" name="name" @value="${this.model.name || ''}" />
-            </div>
-            <div class="form-field">
-                <label>Description</label>
-                <textarea class="form-control model-field" name="description">${this.model.description || ''}</textarea>
-            </div>
 
-            <div class="row">
-                <div class="col-2">
-                    <div class="form-field">
-                        <label>Type</label>
-                        <select name="type" class="form-control model-field">${fieldTypes()}</select>
-                    </div>
-                </div>
+            ${this.renderTabUi()}
 
-                <div class="col-2">
-                    ${typeSpecificOptions()}
-                </div>
-            </div>
-
-            <div class="form-field">
-                <input type="checkbox" disabled name="newVersion" />
-                <label>Create new schema version</label>
-            </div>
 
             <div class="dlg-button-row">
                 <button class="btn btn-danger close-dialog">Cancel</button>

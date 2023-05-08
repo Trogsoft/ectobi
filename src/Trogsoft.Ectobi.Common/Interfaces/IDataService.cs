@@ -8,6 +8,7 @@ namespace Trogsoft.Ectobi.Common.Interfaces
 {
     public interface IDataService
     {
-        Task<Success<ValueMap>> GetData(DataQueryModel query);
+        Task<Success<ValueMapWithMetadata>> GetData(DataQueryModel query);
+        Task<Success<FieldFilterCollection>> GetFilters(string schema);
     }
 }

@@ -8,10 +8,12 @@ namespace Trogsoft.Ectobi.Common
 {
     public class LookupSetModel
     {
+        public long Id { get; set; }
         public string? Name { get; set; }
         public string? Description { get; set; }
         public string? TextId { get; set; }
 
         public List<LookupSetValueModel> Values { get; set; } = new List<LookupSetValueModel>();
+        public string? SchemaTid { get; set; }
     }
 }

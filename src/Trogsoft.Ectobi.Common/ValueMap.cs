@@ -19,4 +19,11 @@ namespace Trogsoft.Ectobi.Common
     public class ValueMapRow : List<string>
     {
     }
+
+    public class ValueMapWithMetadata : ValueMap
+    {
+        public TimeSpan TimeTaken { get; set; }
+        public int TotalRowsForQuery { get; set; }
+    }
+
 }

@@ -54,7 +54,7 @@ export class lookupManager extends ectoTabComponent {
         document.addEventListener('ecto:tableStateChanged', this.ecto.toolbar.render);
 
         if (!soft) {
-            this.client.lookup.list().then(h => {
+            this.client.lookup.list(this.data.path[0] || null).then(h => {
                 this.table.setData(h.result);
                 this.render();
             });

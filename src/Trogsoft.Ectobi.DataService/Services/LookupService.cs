@@ -2,6 +2,7 @@
 using Trogsoft.Ectobi.Common;
 using Trogsoft.Ectobi.Common.Interfaces;
 using Trogsoft.Ectobi.Data;
+using Trogsoft.Ectobi.DataService.Data;
 using Trogsoft.Ectobi.DataService.Interfaces;
 
 namespace Trogsoft.Ectobi.DataService.Services
@@ -12,37 +13,35 @@ namespace Trogsoft.Ectobi.DataService.Services
         private readonly EctoDb db;
         private readonly IEctoMapper mapper;
         private readonly ILookupStorage ils;
+        private readonly IEctoData data;
 
-        public LookupService(ILogger<LookupService> logger, EctoDb db, IEctoMapper mapper, ILookupStorage ils)
+        public LookupService(ILogger<LookupService> logger, EctoDb db, IEctoMapper mapper, ILookupStorage ils, IEctoData data)
         {
             this.logger = logger;
             this.db = db;
             this.mapper = mapper;
             this.ils = ils;
+            this.data = data;
         }
 
-        public async Task<Success<List<LookupSetModel>>> GetLookupSets()
-        {
-
-            List<LookupSetModel> model = new List<LookupSetModel>();
-
-            foreach (var ls in await db.LookupSets.Include(x=>x.Values).ToListAsync())
-                model.Add(mapper.Map<LookupSetModel>(ls));
-
-            return new Success<List<LookupSetModel>>(model);
-
-        }
+        public async Task<Success<IEnumerable<LookupSetModel>>> GetLookupSets(string? schemaTid = null)
+            => new Success<IEnumerable<LookupSetModel>>(await data.Lookup.GetLookupSets(schemaTid));
 
         public async Task<Success<LookupSetModel>> GetLookupSet(string lookupTid)
         {
-
-            if (string.IsNullOrWhiteSpace(lookupTid)) return Success<LookupSetModel>.Error("LookupTid cannot be null.", ErrorCodes.ERR_ARGUMENT_NULL);
-
-            var lookup = await db.LookupSets.Include(x => x.Values).SingleOrDefaultAsync(x => x.TextId == lookupTid);
-            if (lookup == null) return Success<LookupSetModel>.Error("Lookup set not found.", ErrorCodes.ERR_NOT_FOUND);
-
-            return new Success<LookupSetModel>(mapper.Map<LookupSetModel>(lookup));
-
+            try
+            {
+                var result = await data.Lookup.GetLookupSet(lookupTid);
+                return new Success<LookupSetModel>(result);
+            }
+            catch (LookupSetNotFoundException)
+            {
+                return Success<LookupSetModel>.Error("Lookup set not found: " + lookupTid, ErrorCodes.ERR_NOT_FOUND);
+            }
+            catch (Exception ex)
+            {
+                return Success<LookupSetModel>.Error(ex.Message, ErrorCodes.ERR_UNSPECIFIED_ERROR);
+            }
         }
 
         public async Task<Success<LookupSetModel>> CreateLookupSet(LookupSetModel model)
