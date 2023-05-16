@@ -106,6 +106,24 @@ export class fieldEditorDialog extends dialogBase {
                     html += `<option value="${pop.textId}" ${this.model.populator == pop.textId ? 'selected' : ''}>${pop.name}</option>`;
                 })
                 html += `</select></div>`;
+
+                if (this.model.populator) {
+                    var populators = this.populators.filter(x => x.textId == this.model.populator);
+                    if (populators.length > 0) {
+                        var pop = populators[0];
+
+                        pop.options.forEach(opt => {
+                            if (opt.type == 2) {
+                                html += `<div class="checkbox"><input type="checkbox" name="pop-opt-${opt.id}" /> <label>${opt.name}</label></div>`;
+                            }
+                            else if (opt.type == 5) {
+                                html += `<div class="form-field"><label>${opt.name}</label><input class="form-control" type="number" value="" name="pop-opt-${opt.id}" /></div>`;
+                            }
+                        })
+
+                    }
+                }
+
             }
 
             if (this.model.type == fieldType.LookupSet) {
@@ -117,6 +135,16 @@ export class fieldEditorDialog extends dialogBase {
                 })
                 html += '</select></div>';
             }
+
+            if (this.model.type == fieldType.Formula) {
+                html += `
+                    <div class="form-field">
+                        <label>Formula</label>
+                        <textarea name="formula" class="form-control model-field">${this.model.formula || ''}</textarea>
+                    </div>
+                `;
+            }
+
             return html;
         }
 

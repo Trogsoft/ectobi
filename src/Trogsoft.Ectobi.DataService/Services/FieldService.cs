@@ -1,4 +1,8 @@
-﻿using Hangfire.Annotations;
+﻿using DocumentFormat.OpenXml.Drawing.Diagrams;
+using DocumentFormat.OpenXml.InkML;
+using DocumentFormat.OpenXml.Office2010.CustomUI;
+using Hangfire.Annotations;
+using Jint;
 using Microsoft.EntityFrameworkCore;
 using Newtonsoft.Json;
 using System;
@@ -13,7 +17,7 @@ using Trogsoft.Ectobi.DataService.Validation;
 
 namespace Trogsoft.Ectobi.DataService.Services
 {
-    public class FieldService : IFieldService, IInternalFieldService
+    public class FieldService : IFieldService, IFieldBackgroundService
     {
 
         private const double UNIQUE_VALUE_MULTIPLIER = 0.925;
@@ -22,18 +26,22 @@ namespace Trogsoft.Ectobi.DataService.Services
         private readonly EctoDb db;
         private readonly IEctoMapper mapper;
         private readonly ModuleManager mm;
-        private readonly IBackgroundTaskCoordinator bg;
+        private readonly IBackgroundTaskCoordinator backgroundService;
         private readonly IEctoData data;
+        private readonly IPopulatorService populatorService;
+        private readonly IScriptingService scriptingService;
 
         public FieldService(ILogger<FieldService> logger, EctoDb db, IEctoMapper mapper, ModuleManager mm, IBackgroundTaskCoordinator bg,
-            IEctoData data)
+            IEctoData data, IPopulatorService ps, IScriptingService scriptingService)
         {
             this.logger = logger;
             this.db = db;
             this.mapper = mapper;
             this.mm = mm;
-            this.bg = bg;
+            this.backgroundService = bg;
             this.data = data;
+            this.populatorService = ps;
+            this.scriptingService = scriptingService;
         }
 
         public async Task<Success<SchemaFieldEditModel>> GetField(string schemaTid, string fieldTid)
@@ -92,21 +100,28 @@ namespace Trogsoft.Ectobi.DataService.Services
             return new Success<List<SchemaFieldModel>>(list);
         }
 
-        public async Task<Success> DeleteField(string schemaTid, string fieldName, int version = 0)
+        Success IFieldBackgroundService.DeleteField(BackgroundTaskInfo job, string schemaTid, string fieldTid, int version)
         {
-
-            if (string.IsNullOrWhiteSpace(schemaTid)) return Success.Error("SchemaTid cannot be null.", ErrorCodes.ERR_ARGUMENT_NULL);
-            if (string.IsNullOrWhiteSpace(fieldName)) return Success.Error("fieldName cannot be null.", ErrorCodes.ERR_ARGUMENT_NULL);
-
             try
             {
-                await data.Field.DeleteField(schemaTid, fieldName, version);
-                return new Success(true);
+                var result = data.Field.DeleteField(schemaTid, fieldTid, version).Result;                
+                return new Success(result);
             }
             catch (Exception err)
             {
                 return Success.Error(err.Message, ErrorCodes.ERR_UNSPECIFIED_ERROR);
             }
+        }
+
+        public async Task<Success<BackgroundTaskInfo>> DeleteField(string schemaTid, string fieldName, int version = 0)
+        {
+
+            if (string.IsNullOrWhiteSpace(schemaTid)) return Success<BackgroundTaskInfo>.Error("SchemaTid cannot be null.", ErrorCodes.ERR_ARGUMENT_NULL);
+            if (string.IsNullOrWhiteSpace(fieldName)) return Success<BackgroundTaskInfo>.Error("fieldName cannot be null.", ErrorCodes.ERR_ARGUMENT_NULL);
+
+            BackgroundTaskInfo job = new BackgroundTaskInfo($"Deleting {fieldName}");
+            backgroundService.Enqueue<IFieldBackgroundService>(x => x.DeleteField(job, schemaTid, fieldName, version));
+            return new Success<BackgroundTaskInfo>(job);
 
         }
 
@@ -175,7 +190,7 @@ namespace Trogsoft.Ectobi.DataService.Services
             await db.SaveChangesAsync();
 
             if (applyLookupValues)
-                bg.Enqueue<IFieldService>(x => x.ApplyLookupValuesToField(schemaTid, model.TextId));
+                backgroundService.Enqueue<IFieldService>(x => x.ApplyLookupValuesToField(schemaTid, model.TextId));
 
             return new Success<SchemaFieldModel>(mapper.Map<SchemaFieldModel>(dbField));
 
@@ -216,9 +231,14 @@ namespace Trogsoft.Ectobi.DataService.Services
                 if (!string.IsNullOrWhiteSpace(model.ModelName))
                     await data.Field.SetFieldModel(versionField, model.ModelName, model.ModelField);
 
-                bg.Enqueue<IInternalFieldService>(x => x.PopulateField(rootField.Id));
+                if (model.Type == SchemaFieldType.Formula && !string.IsNullOrWhiteSpace(model.Formula))
+                    await data.Field.SetFormula(versionField, model.Formula);
 
                 data.CommitTransaction();
+
+                var job = new BackgroundTaskInfo($"Populating field {rootField.Name}");
+                backgroundService.Enqueue<IFieldBackgroundService>(x => x.PopulateField(job, rootField.Id));
+
                 return new Success<SchemaFieldModel>(versionField);
             }
             catch (Exception ex)
@@ -229,58 +249,63 @@ namespace Trogsoft.Ectobi.DataService.Services
 
         }
 
-        void IInternalFieldService.PopulateField(long fieldId)
+        object? GetTypedValueFromField(Value value)
+        {
+            if (value == null) return null;
+            if (value.SchemaFieldVersion == null || string.IsNullOrWhiteSpace(value.SchemaFieldVersion.TextId)) return null;
+            if (value.BoolValue != null) return value.BoolValue.Value;
+            else if (value.DecimalValue.HasValue) return value.DecimalValue.Value;
+            else if (value.IntegerValue.HasValue) return value.IntegerValue.Value;
+            else return value.RawValue;
+        }
+
+        void IFieldBackgroundService.PopulateField(BackgroundTaskInfo job, long fieldId)
         {
 
+            backgroundService.TaskBegun(job);
+            backgroundService.TaskStatusChanged(job, "Loading field from database");
+
             var field = db.SchemaFields.SingleOrDefault(x => x.Id == fieldId);
-            if (field == null) throw new Exception("Field not found.");
+            if (field == null)
+            {
+                backgroundService.TaskFailed(job);
+                throw new Exception("Field not found.");
+            }
+
+            var fieldVersion = db.SchemaFieldVersions.Include(x => x.Populator).Where(x => x.SchemaFieldId == fieldId).OrderByDescending(x => x.SchemaVersion.Version).FirstOrDefault();
+            if (fieldVersion == null)
+            {
+                backgroundService.TaskFailed(job);
+                throw new Exception("Schema Field Version not found.");
+            }
+
+            var records = db.Records.Where(x => x.Batch.SchemaVersion.Fields.Any(y => y.SchemaFieldId == fieldId) 
+                && !x.Values.Any(x=>x.SchemaFieldVersion.SchemaFieldId == fieldId));
+            var total = records.Count();
+            var count = 0;
 
             if (field.Type == SchemaFieldType.Populator)
             {
 
-                var fv = db.SchemaFieldVersions.Include(x => x.Populator).Where(x => x.SchemaFieldId == fieldId).OrderByDescending(x => x.SchemaVersion.Version).FirstOrDefault();
+                backgroundService.TaskStatusChanged(job, $"Running populator {fieldVersion.Populator} on {fieldVersion.Name}");
 
-                foreach (var record in db.Records.Where(x => x.Batch.SchemaVersion.Fields.Any(y => y.SchemaFieldId == fieldId)))
+                foreach (var record in records)
                 {
 
-                    var populator = mm.GetPopulator(fv.Populator.TextId);
-                    var rt = populator.GetReturnType();
+                    backgroundService.TaskProgressChanged(job, total, count);
 
-                    var pconfig = fv.PopulatorConfiguration;
-                    var poptions = new Dictionary<string, string>();
-
-                    if (!string.IsNullOrWhiteSpace(pconfig))
-                        poptions = JsonConvert.DeserializeObject<Dictionary<string, string>>(pconfig);
+                    count++;
 
                     var recordField = db.Values.SingleOrDefault(x => x.RecordId == record.Id && x.SchemaFieldVersion.SchemaFieldId == fieldId);
                     if (recordField == null)
                     {
-                        var val = new Value
-                        {
-                            SchemaFieldVersionId = fv.Id
-                        };
-
-                        switch (rt)
-                        {
-                            case PopulatorReturnType.Integer:
-                                val.IntegerValue = populator.GetInteger(poptions);
-                                break;
-
-                            case PopulatorReturnType.Decimal:
-                                val.DecimalValue = populator.GetDecimal(poptions);
-                                break;
-
-                            case PopulatorReturnType.String:
-                            default:
-                                val.RawValue = populator.GetString(poptions);
-                                break;
-                        }
-
+                        var val = populatorService.GetPopulatedValue(fieldVersion);
                         record.Values.Add(val);
                     }
 
                 }
 
+                backgroundService.TaskStatusChanged(job, "Saving");
                 db.SaveChanges();
 
             }
@@ -290,10 +315,57 @@ namespace Trogsoft.Ectobi.DataService.Services
                 // todo: run scripts.
 
             }
+            else if (field.Type == SchemaFieldType.Formula)
+            {
+
+                var formula = fieldVersion.Formula;
+                if (string.IsNullOrWhiteSpace(formula)) return;
+
+                backgroundService.TaskStatusChanged(job, $"Resolving formula on {fieldVersion.Name}");
+
+                foreach (var record in records)
+                {
+
+                    backgroundService.TaskProgressChanged(job, total, count);
+                    count++;
+
+                    var fields = db.Values.Include(x => x.SchemaFieldVersion).Where(x => x.RecordId == record.Id).Where(x => x.SchemaFieldVersion != null).ToList();
+                    var recordField = fields.SingleOrDefault(x => x.SchemaFieldVersion.SchemaFieldId == fieldId);
+                    if (recordField == null)
+                    {
+
+                        var val = new Value
+                        {
+                            SchemaFieldVersionId = fieldVersion.Id
+                        };
+
+                        var context = new Dictionary<string, object>();
+                        var i = 0;
+                        foreach (var f in fields)
+                            context.Add(f.SchemaFieldVersion.TextId ?? $"Property{i++}", GetTypedValueFromField(f)!);
+
+                        var parameters = new Dictionary<string, object>() {
+                            { "record", context }
+                        };
+                        var result = scriptingService.ExecuteFormula(formula, parameters)
+                            .GetRecordValue(val);
+
+                        record.Values.Add(val);
+
+                    }
+
+                }
+
+                backgroundService.TaskStatusChanged(job, "Saving");
+                db.SaveChanges();
+
+            }
+
+            backgroundService.TaskCompleted(job);
 
         }
 
-        void IInternalFieldService.AutoDetectSchemaFieldParameters(SchemaFieldEditModel x)
+        void IFieldBackgroundService.AutoDetectSchemaFieldParameters(SchemaFieldEditModel x)
         {
 
             if (x == null) return;

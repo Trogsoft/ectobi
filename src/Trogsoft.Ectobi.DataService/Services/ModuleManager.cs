@@ -26,14 +26,13 @@ namespace Trogsoft.Ectobi.DataService.Services
         {
             using (var scope = issf.CreateScope())
             {
-                var db = scope.ServiceProvider.GetService<EctoDb>();
-                if (db == null) throw new Exception("Database was null.");
+                var db = scope.ServiceProvider.GetRequiredService<EctoDb>();
 
                 var populators = 0;
                 foreach (var type in options.Populators)
                 {
                     if (!typeof(IPopulator).IsAssignableFrom(type)) continue;
-                    if (db.Populators.Any(y => y.TextId == type.FullName)) continue;
+                    if (db.Populators.Any(y => y.TextId == type.Name)) continue;
 
                     var name = type.Name;
                     var attr = type.GetCustomAttribute<DisplayNameAttribute>();
@@ -202,15 +201,29 @@ namespace Trogsoft.Ectobi.DataService.Services
         public Success<List<PopulatorModel>> GetPopulatorDefinitions()
         {
 
-            List<PopulatorModel> pops = new List<PopulatorModel>();
-            foreach (var populator in options.Populators)
-                pops.Add(new PopulatorModel
+            using (var scope = issf.CreateScope())
+            {
+                List<PopulatorModel> pops = new List<PopulatorModel>();
+                foreach (var populator in options.Populators)
                 {
-                    Name = populator.Name,
-                    TextId = populator.Name
-                });
+                    
+                    var pop = new PopulatorModel
+                    {
+                        Name = populator.Name,
+                        TextId = populator.Name
+                    };
 
-            return new Success<List<PopulatorModel>>(pops);
+                    var dnAttr = populator.GetCustomAttribute<DisplayNameAttribute>();
+                    if (dnAttr != null) pop.Name = dnAttr.DisplayName;
+
+                    var popInstance = (IPopulator)scope.ServiceProvider.GetRequiredService(populator);
+                    pop.Options = popInstance.GetOptions();
+
+                    pops.Add(pop);
+                }
+
+                return new Success<List<PopulatorModel>>(pops);
+            }
 
         }
 

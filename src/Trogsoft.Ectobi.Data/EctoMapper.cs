@@ -45,7 +45,7 @@ namespace Trogsoft.Ectobi.Data
             #region FieldFilter Stuff
 
             cfg.CreateMap<SchemaFieldVersion, FieldFilterModel>()
-                .ForMember(x => x.Options, y => y.MapFrom(z => z.LookupSet.Values.OrderBy(q => q.NumericValue)))
+                .ForMember(x => x.Options, y => y.MapFrom(z => z.LookupSet.Values.OrderBy(q => q.Name)))
                 .ReverseMap();
 
             cfg.CreateMap<LookupSetValue, FieldFilterOption>()

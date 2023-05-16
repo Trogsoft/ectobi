@@ -6,6 +6,7 @@ using System.Security.Cryptography.Xml;
 using Trogsoft.Ectobi.Common;
 using Trogsoft.Ectobi.Common.Interfaces;
 using Trogsoft.Ectobi.Data;
+using Trogsoft.Ectobi.DataService.Interfaces;
 
 namespace Trogsoft.Ectobi.DataService.Services
 {
@@ -19,9 +20,10 @@ namespace Trogsoft.Ectobi.DataService.Services
         private readonly IWebHookService iwh;
         private readonly ITemporaryStore temp;
         private readonly IFileTranslatorService fts;
+        private readonly IFieldBackgroundService fieldbg;
 
         public BatchService(ILogger<BatchService> logger, EctoDb db, IEctoMapper mapper, IBackgroundTaskCoordinator bg, ModuleManager mm, IWebHookService iwh,
-            ITemporaryStore temp, IFileTranslatorService fts)
+            ITemporaryStore temp, IFileTranslatorService fts, IFieldBackgroundService fieldbg)
         {
             this.logger = logger;
             this.db = db;
@@ -31,6 +33,7 @@ namespace Trogsoft.Ectobi.DataService.Services
             this.iwh = iwh;
             this.temp = temp;
             this.fts = fts;
+            this.fieldbg = fieldbg;
         }
 
         public async Task<Success<BatchModel>> CreateEmptyBatch(BatchModel model)

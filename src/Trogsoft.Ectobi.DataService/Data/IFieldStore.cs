@@ -13,5 +13,6 @@ namespace Trogsoft.Ectobi.DataService.Data
         Task<bool> OtherFieldVersionsExist(string schemaTid, string fieldTid, int version);
         Task SetFieldModel(SchemaFieldModel versionField, string modelName, string modelField);
         Task SetFieldPopulator(SchemaFieldModel versionField, string populator);
+        Task SetFormula(SchemaFieldModel versionField, string formula);
     }
 }

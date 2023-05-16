@@ -582,16 +582,21 @@ $col in $btn-styles {
     overflow: auto;
 
     .filter-group {
+        position: relative;
+        
         .filter-group-header {
             padding: $pad * 0.5;
             font-weight: bold;
             background-color: lighten($toolbar, 10%);
             display: flex;
             justify-content: space-between;
+            position: sticky;
+            top: 0;
 
             filter-group-header-title {}
 
-            .options {}
+            .options {
+            }
         }
 
         .filter-group-items {

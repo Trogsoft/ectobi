@@ -120,7 +120,7 @@ namespace Trogsoft.Ectobi.DataService
             builder.Services.AddTransient<IEventNotificationService, EventNotificationService>();
             builder.Services.AddTransient<ISchemaService, SchemaService>();
             builder.Services.AddTransient<IFieldService, FieldService>();
-            builder.Services.AddTransient<IInternalFieldService, FieldService>();
+            builder.Services.AddTransient<IFieldBackgroundService, FieldService>();
             builder.Services.AddTransient<IBatchService, BatchService>();
             builder.Services.AddTransient<ILookupService, LookupService>();
             builder.Services.AddTransient<ILookupStorage, LookupStorage>();
@@ -133,6 +133,8 @@ namespace Trogsoft.Ectobi.DataService
             builder.Services.AddTransient<IRandomStringService, RandomStringService>();
             builder.Services.AddTransient<IDataService, Services.DataService>();
             builder.Services.AddTransient<IModelService, ModelService>();
+            builder.Services.AddTransient<IPopulatorService,  PopulatorService>();
+            builder.Services.AddTransient<IScriptingService, ScriptingService>();
             builder.Services.AddTransient<IEctoData, EctoData>();
 
             builder.Services.AddSingleton<IBackgroundTaskCoordinator, BackgroundTaskCoordinator>();

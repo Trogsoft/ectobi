@@ -9,6 +9,7 @@
         Set = 5,
         Script = 6, 
         Populator = 7,
-        DateTime = 8
+        DateTime = 8,
+        Formula = 9
     }
 }

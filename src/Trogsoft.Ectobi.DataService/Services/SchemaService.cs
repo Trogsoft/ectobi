@@ -13,13 +13,13 @@ public class SchemaService : ISchemaService
     private readonly ILogger<SchemaService> logger;
     private readonly EctoDb db;
     private readonly IEctoMapper mapper;
-    private readonly IInternalFieldService fields;
+    private readonly IFieldBackgroundService fields;
     private readonly ILookupService lookup;
     private readonly IWebHookService iwh;
     private readonly IFileTranslatorService fts;
     private readonly IEctoData data;
 
-    public SchemaService(ILogger<SchemaService> logger, EctoDb db, IEctoMapper mapper, IInternalFieldService fields,
+    public SchemaService(ILogger<SchemaService> logger, EctoDb db, IEctoMapper mapper, IFieldBackgroundService fields,
         ILookupService lookup, IWebHookService iwh, IFileTranslatorService fts, IEctoData data)
     {
         this.logger = logger;

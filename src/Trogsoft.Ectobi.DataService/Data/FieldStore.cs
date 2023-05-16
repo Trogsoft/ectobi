@@ -1,5 +1,6 @@
 ﻿using DocumentFormat.OpenXml.Drawing.Charts;
 using DocumentFormat.OpenXml.Spreadsheet;
+using Microsoft.AspNetCore.Mvc.ModelBinding;
 using Microsoft.AspNetCore.Server.IIS.Core;
 using Microsoft.EntityFrameworkCore;
 using System.ComponentModel.DataAnnotations;
@@ -124,6 +125,16 @@ namespace Trogsoft.Ectobi.DataService.Data
 
             dbField.ModelId = dbModel.Id;
             dbField.ModelField = modelField;
+
+            await data.Store.SaveChangesAsync();
+        }
+
+        public async Task SetFormula(SchemaFieldModel versionField, string formula)
+        {
+            var dbField = await data.Store.SchemaFieldVersions.SingleOrDefaultAsync(x => x.Id == versionField.Id);
+            if (dbField == null) throw new FieldNotFoundException();
+
+            dbField.Formula = formula;
 
             await data.Store.SaveChangesAsync();
         }

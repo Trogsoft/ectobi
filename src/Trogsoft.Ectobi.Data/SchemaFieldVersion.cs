@@ -14,6 +14,7 @@ namespace Trogsoft.Ectobi.Data
         public long? PopulatorId { get; set; }
         public Populator? Populator { get; set; }
         public string? PopulatorConfiguration { get; set; }
+        public string? Formula { get; set; }
         public long? ProcessId { get; set; }
         public Process? Process { get; set; }
         public long? LookupSetId { get; set; }

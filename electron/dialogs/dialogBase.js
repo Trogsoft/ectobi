@@ -90,6 +90,9 @@ export class dialogBase {
         } else if (e.currentTarget.matches('select')) {
             var value = e.currentTarget.selectedOptions[0].value;
             this.updateModel(name, value);
+        } else if (e.currentTarget.matches('textarea')) {
+            var value = e.currentTarget.value;
+            this.updateModel(name, value);
         }
     }
 

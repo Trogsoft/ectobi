@@ -9,6 +9,8 @@ public class EctoData : IEctoData
 {
     private IDbContextTransaction? transaction;
 
+    public Guid InstanceId { get; } = Guid.NewGuid();
+
     public EctoData(EctoDb db, IWebHookService webHookService, ModuleManager mm, IEctoMapper mapper)
     {
         Store = db;
@@ -19,6 +21,7 @@ public class EctoData : IEctoData
         Field = new FieldStore(this);
         Lookup = new LookupStore(this);
         Data = new DataStore(this);
+        Progress = new ProgressManager(this);
     }
 
     public IDbContextTransaction BeginTransaction()
@@ -41,5 +44,6 @@ public class EctoData : IEctoData
     public IFieldStore Field { get; }
     public ILookupStore Lookup { get; }
     public IDataStore Data { get; }
+    public ProgressManager Progress { get; }
 
 }

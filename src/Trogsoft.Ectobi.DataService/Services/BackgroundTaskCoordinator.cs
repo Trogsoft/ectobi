@@ -29,15 +29,12 @@ namespace Trogsoft.Ectobi.DataService.Services
             }
         }
 
-        public void Enqueue<T>(Expression<Action<T>> expr)
-        {
-            BackgroundJob.Enqueue<T>(expr);
-        }
+        public void Enqueue<T>(Expression<Action<T>> expr) 
+            => BackgroundJob.Enqueue<T>(expr);
 
         public void Schedule<T>(Expression<Action<T>> expr, TimeSpan delay)
-        {
-            BackgroundJob.Schedule(expr, delay);
-        }
+            => BackgroundJob.Schedule(expr, delay);
+
 
         public async Task TaskBegunAsync(BackgroundTaskInfo bgti)
         {

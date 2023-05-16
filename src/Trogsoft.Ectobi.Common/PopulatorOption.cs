@@ -2,6 +2,7 @@
 {
     public class PopulatorOption
     {
+        public PopulatorOption() { }
         public PopulatorOption(string id, string name, PopulatorOptionType type, string? group = null)
         {
             Id = id;

@@ -21,6 +21,7 @@
         public string? ModelField { get; set; }
         public int Version { get; set; }
         public string Set { get; set; }
+        public string Formula { get; set; }
     }
 
 }

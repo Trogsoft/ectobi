@@ -11,5 +11,6 @@ namespace Trogsoft.Ectobi.Common
         public string Name { get; set; }
         public string Description { get; set; }
         public string TextId { get; set; }
+        public IList<PopulatorOption> Options { get; set; } = new List<PopulatorOption>();
     }
 }

@@ -1,6 +1,8 @@
-﻿namespace Trogsoft.Ectobi.Data
+﻿using Trogsoft.Ectobi.Common.Interfaces;
+
+namespace Trogsoft.Ectobi.Data
 {
-    public class Value
+    public class Value : IValueObject
     {
         public long Id { get; set; }
         public long RecordId { get; set; }  

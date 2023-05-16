@@ -30,8 +30,8 @@ namespace Trogsoft.Ectobi.Common.Interfaces
         /// in the event that the field does not exist in any other schema versions, the root field
         /// will also be deleted.
         /// </remarks>
-        /// <returns>A <see cref="Success"/> object indicating success or failure.</returns>
-        Task<Success> DeleteField(string schemaTid, string fieldName, int version = 0);
+        /// <returns>A <see cref="BackgroundTaskInfo"/> object allowing you to track progress.</returns>
+        Task<Success<BackgroundTaskInfo>> DeleteField(string schemaTid, string fieldName, int version = 0);
 
         /// <summary>
         /// Get the specified field from the latest version of the specified schema

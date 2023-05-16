@@ -55,7 +55,8 @@ class dataQuery {
         var availableOptions = this.getFilterValues(fieldId);
         var selectedOptions = this.getQueryValues(fieldId);
         if (selectedOptions && availableOptions) {
-            if (selectedOptions.length == availableOptions.length) label = availableOptions.length + ' Items';
+            if (selectedOptions.length == availableOptions.length) label = 'All';
+            if (selectedOptions.length > 1 && selectedOptions.length < availableOptions.length) label = selectedOptions.length + ' Items';
             if (selectedOptions.length == 1) label = this.getFilterOptionLabel(fieldId, selectedOptions[0]);
         }
         return label;
@@ -147,10 +148,10 @@ export class schemaData extends ectoTabComponent {
         this.client.data.query(this.query.values).then(h => {
             //this.tblData = h.result;
             this.table.appendValueMap(h.result);
-            this.ecto.statusBar.addReadout(this.idCode, 'time', 'Time taken', h.result.timeTaken);
+            this.ecto.statusBar.addReadout('query', 'time', 'Time taken', h.result.timeTaken);
             var endValue = this.query.values.recordsPerPage * this.query.values.page;
             if (endValue > h.result.totalRowsForQuery) endValue = h.result.totalRowsForQuery;
-            this.ecto.statusBar.addReadout(this.idCode, 'rows', `0-${endValue} of ${h.result.totalRowsForQuery} rows`);
+            this.ecto.statusBar.addReadout('query', 'rows', `0-${endValue} of ${h.result.totalRowsForQuery} rows`);
             this.render();
         });
     }
@@ -194,11 +195,11 @@ export class schemaData extends ectoTabComponent {
         this.client.data.query(this.query.values).then(h => {
             this.tblData = h.result;
             this.table.loadValueMap(h.result);
-            this.ecto.statusBar.addReadout(this.idCode, 'time', 'Time taken', h.result.timeTaken);
+            this.ecto.statusBar.addReadout('query', 'time', 'Time taken', h.result.timeTaken);
             var endValue = this.query.values.recordsPerPage * this.query.values.page;
             if (endValue > h.result.totalRowsForQuery)
                 endValue = h.result.totalRowsForQuery;
-            this.ecto.statusBar.addReadout(this.idCode, 'rows', `0-${endValue} of ${h.result.totalRowsForQuery} rows`);
+            this.ecto.statusBar.addReadout('query', 'rows', `0-${endValue} of ${h.result.totalRowsForQuery} rows`);
             this.render();
         });
     }
@@ -213,7 +214,7 @@ export class schemaData extends ectoTabComponent {
         this.container.removeEventListener('scroll', this.handleInfiniteScroll);
         window.removeEventListener('click', this.closePopup);
         this.ecto.toolbar.clear(this.idCode);
-        this.ecto.statusBar.clear(this.idCode);
+        this.ecto.statusBar.clear('query');
     }
 
     renderGrid() {
@@ -324,6 +325,7 @@ export class schemaData extends ectoTabComponent {
         else if (mode =='all')
             this.query.selectAllValues(fieldId);
 
+        this.renderPopup();
 
     }
 

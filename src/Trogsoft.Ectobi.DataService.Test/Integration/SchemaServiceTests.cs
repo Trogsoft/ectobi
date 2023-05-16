@@ -40,7 +40,7 @@ namespace Trogsoft.Ectobi.DataService.Test.Integration
             var ifts = new Mock<IFileTranslatorService>();
             var opts = new Mock<IOptions<ModuleOptions>>();
             var mapper = new Mock<EctoMapper>().Object;
-            var fieldService = new Mock<IInternalFieldService>().Object;
+            var fieldService = new Mock<IFieldBackgroundService>().Object;
             var db = GetDatabase();
             var data = new EctoData(db, webHookService.Object, null, mapper);
 
