@@ -350,3 +350,4 @@ MigrationBackup/
 .ionide/
 /build/Output
 *.code-workspace
+/electron/EctobiDesktop-win32-x64
